@@ -1,0 +1,3 @@
+<Commands>
+  <ListProcesses SearchFor="RunnerDaemonXfmTfs*"/>
+</Commands>

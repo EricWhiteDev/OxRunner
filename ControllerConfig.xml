@@ -1,0 +1,27 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Config>
+  <Editor Val="np" />
+  <Computers>
+    <Computer Name="win8-1"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="vaio-qm7"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="bigi5-8"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="mini-1"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="mini-2"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="mini-3"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+    <Computer Name="pc17"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
+  </Computers>
+</Config>

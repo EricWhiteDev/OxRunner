@@ -1,0 +1,10 @@
+<Commands>
+
+  <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\" ExeName="RunnerDaemonXfmTfs.exe" />
+  
+  <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerMasterXfmTfs\"
+                ExeName="RunnerMasterXfmTfs.exe" />
+  
+  <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\bin\Debug\RunnerDaemonXfmTfs*.exe" />
+  
+</Commands>
