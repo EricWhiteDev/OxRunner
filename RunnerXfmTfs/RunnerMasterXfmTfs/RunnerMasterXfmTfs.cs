@@ -14,6 +14,7 @@ namespace OxRun
         static DirectoryInfo m_DiRepo;
         static string m_TestFileStorageLocation = @"C:\";
         static string[] m_FilesToProcess;
+        static Dictionary<string, bool> m_RemainingFiles;
         static List<List<string>> m_Jobs;
         static int m_NumberOfClientComputers;
 
@@ -43,6 +44,10 @@ namespace OxRun
             //FileInfo fiFileList = new FileInfo(m_TestFileStorageLocation + "/TestFileStorage/TestFileStorageFileList.txt");
             FileInfo fiFileList = new FileInfo(m_TestFileStorageLocation + "/TestFileStorage/SmallFileList.txt");
             m_FilesToProcess = File.ReadAllLines(fiFileList.FullName);
+            m_RemainingFiles = new Dictionary<string, bool>();
+            foreach (var item in m_FilesToProcess)
+                m_RemainingFiles.Add(item, false);
+
             m_Jobs = DivvyIntoJobs(m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
 
             m_DiRepo = FileUtils.GetDateTimeStampedDirectoryInfo("C:/TestFileRepo");
@@ -58,27 +63,42 @@ namespace OxRun
             if (message.Label == "RunnerDaemonReady")
             {
                 PrintToConsole("Received RunnerDaemonReady");
-                if (!m_Jobs.Any())
+                if (m_Jobs.Any())
                 {
-                    // all done
-                    // todo kill the RunnerDaemons
-                    Environment.Exit(0);
+                    SendFilesToDaemon(message.RunnerDaemonMachineName, message.RunnerDaemonQueueName);
+                    return;
                 }
-                SendFilesToDaemon(message.RunnerDaemonMachineName, message.RunnerDaemonQueueName);
-                return;
             }
             //     <=<=<=<=<=<=<=<=<=<=<=<= Receive WorkComplete sent by RunnerDaemon <=<=<=<=<=<=<=<=<=<=<=<=
             if (message.Label == "WorkComplete")
             {
-                PrintToConsole("Received WorkComplete");
-                if (!m_Jobs.Any())
+                var documents = message.Xml.Element("Documents");
+                PrintToConsole(string.Format("Received WorkComplete, File count: {0}", documents.Elements("Document").Count()));
+
+                foreach (var doc in documents.Elements("Document").Attributes("Name").Select(a => (string)a))
                 {
-                    // all done
-                    // todo kill the RunnerDaemons
+                    var toRemove = doc.Substring(m_TestFileStorageLocation.Length);
+                    //PrintToConsole("toRemove: " + toRemove);
+                    //PrintToConsole("m_Remaining.First: " + m_RemainingFiles.First());
+                    if (!m_RemainingFiles.Remove(toRemove))
+                    {
+                        PrintToConsole("Error, didn't remove: " + toRemove);
+                        Environment.Exit(0);
+                    }
+                }
+                PrintToConsole(string.Format("Remaining files count: {0}", m_RemainingFiles.Count()));
+                if (!m_RemainingFiles.Any())
+                {
+                    PrintToConsole("All done");
+                    // send message to controller daemon to kill runner daemons
                     Environment.Exit(0);
                 }
-                SendFilesToDaemon(message.RunnerDaemonMachineName, message.RunnerDaemonQueueName);
-                return;
+
+                if (m_Jobs.Any())
+                {
+                    SendFilesToDaemon(message.RunnerDaemonMachineName, message.RunnerDaemonQueueName);
+                    return;
+                }
             }
         }
 
@@ -90,7 +110,7 @@ namespace OxRun
             m_Jobs.Remove(thisJob);
 
             // =>=>=>=>=>=>=>=>=>=>=>=> Send Do message =>=>=>=>=>=>=>=>=>=>=>=>
-            PrintToConsole("Sending Do");
+            PrintToConsole(string.Format("Do: remaining: {0}  this job: {1}", m_Jobs.Select(j => j.Count()).Sum(), thisJob.Count().ToString()));
             var cmsg = new XElement("Message",
                 new XElement("RunnerMasterMachineName",
                     new XAttribute("Val", Environment.MachineName)),
