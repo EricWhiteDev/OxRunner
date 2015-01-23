@@ -12,7 +12,7 @@ namespace OxRun
     class RunnerMasterXfmTfs : RunnerMaster
     {
         static DirectoryInfo m_DiRepo;
-        static string m_TestFileStorageLocation = @"C:\";
+        static string m_TestFileStorageLocation = @"E:\";
         static string[] m_FilesToProcess;
         static Dictionary<string, bool> m_RemainingFiles;
         static List<List<string>> m_Jobs;
