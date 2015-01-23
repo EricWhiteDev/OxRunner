@@ -12,7 +12,8 @@ namespace OxRun
     class RunnerMasterXfmTfs : RunnerMaster
     {
         static DirectoryInfo m_DiRepo;
-        static string m_TestFileStorageLocation = @"E:\";
+        static string m_TestFileStorageRootLocation = null;
+        static string m_TestFileStorageFileList = null;
         static string[] m_FilesToProcess;
         static Dictionary<string, bool> m_RemainingFiles;
         static List<List<string>> m_Jobs;
@@ -21,28 +22,29 @@ namespace OxRun
         static void Main(string[] args)
         {
             ConsolePosition.SetConsolePosition();
-            if (args.Length != 0)
+            if (args.Length != 3)
             {
-                if (!int.TryParse(args[0], out m_NumberOfClientComputers))
-                    m_NumberOfClientComputers = 1;
+                throw new ArgumentException("Arguments to RunnerMaster are incorrect.  Should be 1) number of client computers, 2) test file storage root location, 3) test file storage file list");
             }
-            else
+            if (!int.TryParse(args[0], out m_NumberOfClientComputers))
                 m_NumberOfClientComputers = 1;
+            m_TestFileStorageRootLocation = args[1];
+            m_TestFileStorageFileList = args[2];
             var runnerMaster = new RunnerMasterXfmTfs();
-            runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Number of client computers: {0}", m_NumberOfClientComputers));
             runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerXFormTestStorageMaster");
+            runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Number of client computers: {0}", m_NumberOfClientComputers));
+            runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Test file storage root location: {0}", m_TestFileStorageRootLocation));
+            runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Test file storage file list: {0}", m_TestFileStorageFileList));
             runnerMaster.InitializeWork();
             runnerMaster.ReceivePingSendPong();
             runnerMaster.MessageLoop(m => runnerMaster.ProcessMessage(m));
         }
 
-
         public RunnerMasterXfmTfs() : base() { }
 
         private void InitializeWork()
         {
-            //FileInfo fiFileList = new FileInfo(m_TestFileStorageLocation + "/TestFileStorage/TestFileStorageFileList.txt");
-            FileInfo fiFileList = new FileInfo(m_TestFileStorageLocation + "/TestFileStorage/SmallFileList.txt");
+            FileInfo fiFileList = new FileInfo(m_TestFileStorageRootLocation + m_TestFileStorageFileList);
             m_FilesToProcess = File.ReadAllLines(fiFileList.FullName);
             m_RemainingFiles = new Dictionary<string, bool>();
             foreach (var item in m_FilesToProcess)
@@ -77,7 +79,7 @@ namespace OxRun
 
                 foreach (var doc in documents.Elements("Document").Attributes("Name").Select(a => (string)a))
                 {
-                    var toRemove = doc.Substring(m_TestFileStorageLocation.Length);
+                    var toRemove = doc.Substring(m_TestFileStorageRootLocation.Length);
                     //PrintToConsole("toRemove: " + toRemove);
                     //PrintToConsole("m_Remaining.First: " + m_RemainingFiles.First());
                     if (!m_RemainingFiles.Remove(toRemove))
@@ -115,9 +117,10 @@ namespace OxRun
                 new XElement("RunnerMasterMachineName",
                     new XAttribute("Val", Environment.MachineName)),
                 new XElement("Repo", new XAttribute("Val", m_DiRepo.FullName)),
+                new XElement("TestFileStorageRootLocation", new XAttribute("Val", m_TestFileStorageRootLocation)),
                 new XElement("Documents",
                     thisJob.Select(item => new XElement("Document",
-                        new XAttribute("Name", m_TestFileStorageLocation + item)))));
+                        new XAttribute("Name", m_TestFileStorageRootLocation + item)))));
             //var s = cmsg.ToString().Split(new [] {"\r\n"}, StringSplitOptions.None);
             //foreach (var item in s)
             //    PrintToConsole(item);

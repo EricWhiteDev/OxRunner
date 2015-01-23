@@ -166,7 +166,6 @@ namespace OxRun
                 Process process = null;
                 while (true)
                 {
-                    // ====================================== Process.Start ======================================
                     process = Process.Start(si);
                     if (process != null)
                         break;
@@ -182,155 +181,8 @@ namespace OxRun
                 var xeCommand = XElement.Load(fiCommand.FullName);
                 foreach (var command in xeCommand.Elements())
                 {
-                    if (command.Name.LocalName == "BuildMultipleExes")
-                    {
-                        var projectPath = new DirectoryInfo((string)command.Attribute("ProjectPath"));
-                        var exeName = (string)command.Attribute("ExeName");
-                        if (!BuildMultipleExes(projectPath, exeName))
-                            break;
-                        continue;
-                    }
-
-                    if (command.Name.LocalName == "RunnerMaster")
-                    {
-                        var msBuildPath = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe";
-
-                        var projectPath = new DirectoryInfo((string)command.Attribute("ProjectPath"));
-                        var diExeLocation = new DirectoryInfo(Path.Combine(projectPath.FullName, "bin/debug/"));
-                        var exeName = (string)command.Attribute("ExeName");
-                        var fiExe = new FileInfo(Path.Combine(projectPath.FullName, "bin/debug/", exeName));
-
-                        try
-                        {
-                            if (fiExe.Exists)
-                                fiExe.Delete();
-                        }
-                        catch (Exception)
-                        {
-                            PrintToConsole(ConsoleColor.Red, string.Format("Can't delete RunnerMaster exe: ", fiExe.Name));
-                            PrintToConsole(ConsoleColor.Red, "Is it still running?");
-                            UpdateConsole();
-                            break;
-                        }
-
-                        var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
-                        if (results.ExitCode == 0)
-                        {
-                            PrintToConsole(ConsoleColor.Gray, string.Format("Build successful for {0}", fiExe.Name));
-                            UpdateConsole();
-                        }
-                        else
-                        {
-                            PrintToConsole(ConsoleColor.Red, string.Format("Build for {0} failed", fiExe.Name));
-                            var sa = results.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
-                            foreach (var item in sa)
-                            {
-                                PrintToConsole(ConsoleColor.Red, item);
-                            }
-                            UpdateConsole();
-                        }
-
-                        // first (and only) argument from controller master to RunnerMaster is the number of client computers.
-                        var args = m_ActiveDaemons.Count().ToString();
-                        var workingDir = (string)command.Attribute("WorkingDirectory");
-
-                        if (fiExe.Exists)
-                        {
-                            ProcessStartInfo si = new ProcessStartInfo(fiExe.FullName, args);
-                            si.WindowStyle = ProcessWindowStyle.Normal;
-                            while (true)
-                            {
-                                Process proc = Process.Start(si);
-                                if (proc == null)
-                                    System.Threading.Thread.Sleep(100);
-                                else
-                                    break;
-                            }
-
-                            bool receivedPong = false;
-                            for (int i = 0; i < 10; i++)
-                            {
-                                // Send Ping and receive Pong to make sure that RunnerMaster is alive.
-
-                                // =>=>=>=>=>=>=>=>=>=>=>=> Send Ping =>=>=>=>=>=>=>=>=>=>=>=>
-                                PrintToConsole(ConsoleColor.White, "Sending Ping to RunnerMaster");
-                                UpdateConsole();
-
-                                var cmsg = new XElement("Message",
-                                    new XElement("MasterMachineName",
-                                        new XAttribute("Val", Environment.MachineName)));
-
-                                bool sentMessage = false;
-                                for (int j = 0; j < 10; j++)
-                                {
-                                    try
-                                    {
-                                        Runner.SendMessage("Ping", cmsg, Environment.MachineName, OxRunConstants.RunnerMasterIsAliveQueueName);
-                                        sentMessage = true;
-                                        break;
-                                    }
-                                    catch (MessageQueueException)
-                                    {
-                                        // it may not have been created yet
-                                        // wait one second, then try again
-                                        System.Threading.Thread.Sleep(1000);
-                                    }
-                                }
-
-                                if (sentMessage)
-                                {
-                                    // <=<=<=<=<=<=<=<=<=<=<=<= Receive message sent by RunnerMaster <=<=<=<=<=<=<=<=<=<=<=<=
-                                    OxMessage pongMessage;
-
-                                    pongMessage = Runner.ReceiveMessage(m_ControllerMasterIsAliveQueue, 1);
-                                    if (pongMessage.Timeout)
-                                        continue;
-
-                                    //     <=<=<=<=<=<=<=<=<=<=<=<= Receive Pong sent by RunnerMaster <=<=<=<=<=<=<=<=<=<=<=<=
-                                    if (pongMessage.Label == "Pong")
-                                    {
-                                        var daemonMachineName = (string)pongMessage.Xml.Elements("DaemonMachineName").Attributes("Val").FirstOrDefault();
-                                        PrintToConsole(ConsoleColor.White, "Received Pong from RunnerMaster");
-                                        receivedPong = true;
-                                        UpdateConsole();
-                                        break;
-                                    }
-                                    else
-                                    {
-                                        throw new Exception("ControllerMaster: Internal error, received other than Pong message"); // todo
-                                    }
-                                }
-                            }
-                            if (!receivedPong)
-                            {
-                                throw new Exception("ControllerMaster: Did not receive Pong from RunnerMaster"); // todo
-                            }
-                        }
-                        else
-                        {
-                            throw new ArgumentException("Invalid executable path.", "exePath"); // todo
-                        }
-                        continue;
-                    }
-
-                    command.Add(new XElement("MasterMachineName",
-                        new XAttribute("Val", Environment.MachineName)));
-
-                    if (command.Name.LocalName == "ListProcesses")
-                    {
-                        PrintToConsole(ConsoleColor.Gray, "");
-                        PrintToConsole(ConsoleColor.Gray, "List Processes");
-                        PrintToConsole(ConsoleColor.Gray, "==============");
-                    }
-
-                    foreach (var daemonMachineName in m_ActiveDaemons)
-                    {
-                        // =>=>=>=>=>=>=>=>=>=>=>=> Send Do =>=>=>=>=>=>=>=>=>=>=>=>
-                        PrintToConsole(ConsoleColor.White, string.Format("Sending Do {0} to {1}", command.Name.LocalName, daemonMachineName));
-                        Runner.SendMessage("Do", command, daemonMachineName, OxRunConstants.ControllerDaemonQueueName);
-                    }
-
-                    UpdateConsole();
+                    if (RunOneCommand(command) == false)
+                        break;
                 }
             }
             catch (XmlException xe)
@@ -347,6 +199,181 @@ namespace OxRun
                 WriteLog();
                 Environment.Exit(0);
             }
+        }
+
+        private static bool RunOneCommand(XElement command)
+        {
+            if (command.Name.LocalName == "BuildMultipleExes")
+            {
+                var projectPath = new DirectoryInfo((string)command.Attribute("ProjectPath"));
+                var exeName = (string)command.Attribute("ExeName");
+                if (!BuildMultipleExes(projectPath, exeName))
+                    return false;
+                return true;
+            }
+
+            if (command.Name.LocalName == "If")
+            {
+                var ifMachineName = (string)command.Attribute("MachineName");
+                if (ifMachineName.ToLower() == Environment.MachineName.ToLower())
+                {
+                    foreach (var subCommand in command.Elements())
+                    {
+                        var retValue = RunOneCommand(subCommand);
+                        if (retValue == false)
+                            return false;
+                    }
+                    return true;
+                }
+                return true;
+            }
+
+            if (command.Name.LocalName == "RunnerMaster")
+            {
+                var msBuildPath = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe";
+
+                var projectPath = new DirectoryInfo((string)command.Attribute("ProjectPath"));
+                var diExeLocation = new DirectoryInfo(Path.Combine(projectPath.FullName, "bin/debug/"));
+                var exeName = (string)command.Attribute("ExeName");
+                var fiExe = new FileInfo(Path.Combine(projectPath.FullName, "bin/debug/", exeName));
+
+                try
+                {
+                    if (fiExe.Exists)
+                        fiExe.Delete();
+                }
+                catch (Exception)
+                {
+                    PrintToConsole(ConsoleColor.Red, string.Format("Can't delete RunnerMaster exe: ", fiExe.Name));
+                    PrintToConsole(ConsoleColor.Red, "Is it still running?");
+                    UpdateConsole();
+                    return false;
+                }
+
+                var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
+                if (results.ExitCode == 0)
+                {
+                    PrintToConsole(ConsoleColor.Gray, string.Format("Build successful for {0}", fiExe.Name));
+                    UpdateConsole();
+                }
+                else
+                {
+                    PrintToConsole(ConsoleColor.Red, string.Format("Build for {0} failed", fiExe.Name));
+                    var sa = results.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var item in sa)
+                        PrintToConsole(ConsoleColor.Red, item);
+                    UpdateConsole();
+                    return false;
+                }
+
+                // first argument from controller master to RunnerMaster is the number of client computers.
+                // other arguments are appended to the first arg
+                var args = m_ActiveDaemons.Count().ToString();
+                var otherArgs = (string)command.Attribute("Args");
+                if (otherArgs != null)
+                    args = args + " " + otherArgs;
+                var workingDir = (string)command.Attribute("WorkingDirectory");
+
+                if (fiExe.Exists)
+                {
+                    ProcessStartInfo si = new ProcessStartInfo(fiExe.FullName, args);
+                    si.WindowStyle = ProcessWindowStyle.Normal;
+                    while (true)
+                    {
+                        Process proc = Process.Start(si);
+                        if (proc == null)
+                            System.Threading.Thread.Sleep(100);
+                        else
+                            break;
+                    }
+
+                    bool receivedPong = false;
+                    for (int i = 0; i < 20; i++)
+                    {
+                        // Send Ping and receive Pong to make sure that RunnerMaster is alive.
+
+                        // =>=>=>=>=>=>=>=>=>=>=>=> Send Ping =>=>=>=>=>=>=>=>=>=>=>=>
+                        PrintToConsole(ConsoleColor.White, "Sending Ping to RunnerMaster");
+                        UpdateConsole();
+
+                        var cmsg = new XElement("Message",
+                            new XElement("MasterMachineName",
+                                new XAttribute("Val", Environment.MachineName)));
+
+                        bool sentMessage = false;
+                        for (int j = 0; j < 10; j++)
+                        {
+                            try
+                            {
+                                Runner.SendMessage("Ping", cmsg, Environment.MachineName, OxRunConstants.RunnerMasterIsAliveQueueName);
+                                sentMessage = true;
+                                break;
+                            }
+                            catch (MessageQueueException)
+                            {
+                                // it may not have been created yet
+                                // wait one second, then try again
+                                System.Threading.Thread.Sleep(1000);
+                            }
+                        }
+
+                        if (sentMessage)
+                        {
+                            // <=<=<=<=<=<=<=<=<=<=<=<= Receive message sent by RunnerMaster <=<=<=<=<=<=<=<=<=<=<=<=
+                            OxMessage pongMessage;
+
+                            pongMessage = Runner.ReceiveMessage(m_ControllerMasterIsAliveQueue, 1);
+                            if (pongMessage.Timeout)
+                            {
+                                PrintToConsole(ConsoleColor.Red, "Did not receive Pong message from RunnerMaster, try again");
+                                continue;
+                            }
+
+                            //     <=<=<=<=<=<=<=<=<=<=<=<= Receive Pong sent by RunnerMaster <=<=<=<=<=<=<=<=<=<=<=<=
+                            if (pongMessage.Label == "Pong")
+                            {
+                                PrintToConsole(ConsoleColor.White, "Received Pong from RunnerMaster");
+                                receivedPong = true;
+                                UpdateConsole();
+                                return true;
+                            }
+                            else
+                            {
+                                throw new Exception("ControllerMaster: Internal error, received other than Pong message"); // todo
+                            }
+                        }
+                    }
+                    if (!receivedPong)
+                    {
+                        throw new Exception("ControllerMaster: Did not receive Pong from RunnerMaster"); // todo
+                    }
+                }
+                else
+                {
+                    throw new ArgumentException("Invalid executable path.", "exePath"); // todo
+                }
+                return true;
+            }
+
+            command.Add(new XElement("MasterMachineName",
+                new XAttribute("Val", Environment.MachineName)));
+
+            if (command.Name.LocalName == "ListProcesses")
+            {
+                PrintToConsole(ConsoleColor.Gray, "");
+                PrintToConsole(ConsoleColor.Gray, "List Processes");
+                PrintToConsole(ConsoleColor.Gray, "==============");
+            }
+
+            foreach (var daemonMachineName in m_ActiveDaemons)
+            {
+                // =>=>=>=>=>=>=>=>=>=>=>=> Send Do =>=>=>=>=>=>=>=>=>=>=>=>
+                PrintToConsole(ConsoleColor.White, string.Format("Sending Do {0} to {1}", command.Name.LocalName, daemonMachineName));
+                Runner.SendMessage("Do", command, daemonMachineName, OxRunConstants.ControllerDaemonQueueName);
+            }
+
+            UpdateConsole();
+            return true;
         }
 
         private static bool BuildMultipleExes(DirectoryInfo projectPath, string exeName)

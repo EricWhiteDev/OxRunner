@@ -19,6 +19,9 @@ namespace OxRun
             Console.ForegroundColor = ConsoleColor.White;
             ConsolePosition.SetConsolePosition();
 
+            if (args.Length == 0)
+                throw new ArgumentException("ControllerDaemon did not pass any arguments to RunnerDaemon");
+
             string runnerMasterMachineName = args[0];
 
             // MinorRevision will be unique for each daemon, so we append it for the daemon queue name.
@@ -45,12 +48,13 @@ namespace OxRun
                 {
                     PrintToConsole("Received Do");
                     var repoLocation = new DirectoryInfo((string)doMessage.Xml.Elements("Repo").Attributes("Val").FirstOrDefault());
+                    var testFileStorageRootLocation = (string)doMessage.Xml.Elements("TestFileStorageRootLocation").Attributes("Val").FirstOrDefault();
                     var repo = new Repo(repoLocation);
                     PrintToConsole(string.Format("Adding to Repo: {0}", repoLocation.FullName));
                     foreach (var file in doMessage.Xml.Elements("Documents").Elements("Document").Attributes("Name").Select(a => (string)a))
                     {
                         var fi = new FileInfo(file);
-                        var moniker = fi.FullName.Split(':')[1];
+                        var moniker = file.Substring(testFileStorageRootLocation.Length);
                         PrintToConsole("Storing: " + fi.Name);
                         repo.Store(fi, moniker);
                     }
