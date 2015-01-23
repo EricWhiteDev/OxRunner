@@ -18,7 +18,7 @@ namespace OxRun
 
         public RunnerMaster()
         {
-            m_RunnerLog = new RunnerLog("../../RunnerMaster");
+            m_RunnerLog = new RunnerLog("../../../RunnerMaster");
             m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
 
             // ======================= INIT runner master Queue =======================
@@ -148,7 +148,7 @@ namespace OxRun
 
         private int CalcItemsInCurrentJob(int remainingItems, int totalWorkDaemons, int maxPerJob)
         {
-            int itemsInCurrentJob = remainingItems / totalWorkDaemons;
+            int itemsInCurrentJob = (remainingItems / totalWorkDaemons) / 2;
             itemsInCurrentJob = Math.Min(itemsInCurrentJob, maxPerJob);
             itemsInCurrentJob = Math.Max(itemsInCurrentJob, 1);
             return itemsInCurrentJob;

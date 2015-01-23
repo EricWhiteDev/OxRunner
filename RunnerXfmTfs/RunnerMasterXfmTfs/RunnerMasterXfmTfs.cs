@@ -19,6 +19,7 @@ namespace OxRun
 
         static void Main(string[] args)
         {
+            ConsolePosition.SetConsolePosition();
             if (args.Length != 0)
             {
                 if (!int.TryParse(args[0], out m_NumberOfClientComputers))

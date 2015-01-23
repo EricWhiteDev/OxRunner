@@ -17,6 +17,7 @@ namespace OxRun
         static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.White;
+            ConsolePosition.SetConsolePosition();
 
             string runnerMasterMachineName = args[0];
 

@@ -27,6 +27,7 @@ namespace OxRun
 
         static void Main(string[] args)
         {
+            ConsolePosition.SetConsolePosition();
             ReadControllerConfig();
             SetUpConsoleWindow();
             InitializeLog();
@@ -639,11 +640,5 @@ namespace OxRun
     {
         public ConsoleColor Color;
         public string Text;
-    }
-
-    static class ConsoleConstants
-    {
-        public static int Width = 70;
-        public static int Height = 50;
     }
 }

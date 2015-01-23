@@ -28,7 +28,7 @@ namespace OxRun
 
         public RunnerDaemon(string runnerMasterMachineName, short minorRevisionNumber)
         {
-            m_RunnerLog = new RunnerLog(string.Format("../../RunnerDaemon-{0:00}", minorRevisionNumber));
+            m_RunnerLog = new RunnerLog(string.Format("../../../RunnerDaemon-{0:00}", minorRevisionNumber));
             m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
             m_RunnerMasterMachineName = runnerMasterMachineName;
             InitializeRunnerDaemonQueues(runnerMasterMachineName, minorRevisionNumber);

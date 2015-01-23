@@ -21,6 +21,8 @@ namespace OxRun
             var fiConfig = new FileInfo("../../../ControllerConfig.xml");
             m_XdConfig = XDocument.Load(fiConfig.FullName);
 
+            ConsolePosition.ResetConsolePositioning();
+            ConsolePosition.SetConsolePosition();
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.Write("ControllerDaemon: ");
             Console.ForegroundColor = ConsoleColor.White;
