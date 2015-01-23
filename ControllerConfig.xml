@@ -26,5 +26,8 @@
     <Computer Name="ibm-1"
               MaxConcurrentJobs="8"
               WindowStyle="Normal" />
+    <Computer Name="lenovo-pc"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
   </Computers>
 </Config>
