@@ -21,7 +21,7 @@ namespace OxRun
     public class ConsoleConstants
     {
         public static int Width = 55;
-        public static int Height = 35;
+        public static int Height = 24;
     }
     
     public class ConsolePosition
@@ -39,7 +39,7 @@ namespace OxRun
         private static int m_TopOffset = 5;
         private static int m_LeftOffset = 5;
 
-        private static int m_Width = 480; // should match up to ConsoleConstants, which is in characters
+        private static int m_Width = 320; // should match up to ConsoleConstants, which is in characters
         private static int m_Height = 500;
 
         static ConsoleRectangle[] m_ConsoleInfo = new[] {
