@@ -16,4 +16,11 @@
         <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\bin\Debug\RunnerDaemonXfmTfs*.exe" />
     </If>
   
+    <If MachineName="asus-t100">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerMasterXfmTfs\"
+                      ExeName="RunnerMasterXfmTfs.exe"
+                      Args="C:\ TestFileStorage\SmallFileList.txt" />
+        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\bin\Debug\RunnerDaemonXfmTfs*.exe" />
+    </If>
+  
 </Commands>

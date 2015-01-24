@@ -29,5 +29,8 @@
     <Computer Name="lenovo-pc"
               MaxConcurrentJobs="8"
               WindowStyle="Normal" />
+    <Computer Name="asus-t100"
+              MaxConcurrentJobs="8"
+              WindowStyle="Normal" />
   </Computers>
 </Config>
