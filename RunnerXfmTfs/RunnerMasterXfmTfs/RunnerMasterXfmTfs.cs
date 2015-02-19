@@ -52,7 +52,7 @@ namespace OxRun
 
             m_Jobs = DivvyIntoJobs(m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
 
-            m_DiRepo = FileUtils.GetDateTimeStampedDirectoryInfo("C:/TestFileRepo");
+            m_DiRepo = FileUtils.GetDateTimeStampedDirectoryInfo("//bigi5-8/c/TestFileRepo");
             var repo = new Repo(m_DiRepo);
 
             PrintToConsole(ConsoleColor.White, string.Format("Creating Repo {0}", m_DiRepo.FullName));
