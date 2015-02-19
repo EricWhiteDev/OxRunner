@@ -45,12 +45,6 @@ namespace OxRun
         static ConsoleRectangle[] m_ConsoleInfo = new[] {
             new ConsoleRectangle() {
                 Top = m_TopOffset,
-                Left = m_LeftOffset,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
                 Left = m_LeftOffset + m_Width * 1,
                 Height = m_Height,
                 Width = m_Width,
@@ -93,6 +87,12 @@ namespace OxRun
             },
         };
 
+        public static void SetControllerMasterConsolePosition(int height, int width)
+        {
+            SetWindowPos(MyConsole, 0, m_LeftOffset, m_TopOffset, 0, 0, SWP_NOSIZE);
+            Console.SetWindowSize(width, height);
+        }
+
         private static string m_LastConsolePositionFileName = "LastConsolePosition.log";
 
         public static void SetConsolePosition()
@@ -131,7 +131,7 @@ namespace OxRun
                 else
                     lastConsolePosition = 1;
                 int nextConsolePosition = lastConsolePosition + 1;
-                if (nextConsolePosition == 9)
+                if (nextConsolePosition == 8)
                     nextConsolePosition = 1;
                 try
                 {

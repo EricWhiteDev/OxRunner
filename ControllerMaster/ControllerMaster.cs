@@ -25,9 +25,38 @@ namespace OxRun
         static FileInfo m_FiLog = null;
         static string m_Editor = null;
 
+        static int m_ConsoleHeight = 40;
+        static int m_ConsoleWidth = 80;
+        static int m_LogWidth = 40;
+
+        //                                    m_LogWidth                              m_ConsoleWidth
+        // +----------------------------------------+---------------------------------------------+
+        // |                                        |XfmTfs                                       |
+        // |                                        |                                             |
+        // |                                        |Start Time      : 12:42PM                    |
+        // |                                        |Elapsed Time    : 0:36:23                    |
+        // |                                        |Time Left       : 0:21:23                    |
+        // |                                        |                                             |
+        // |                                        |Total Items     : 32333                      |
+        // |                                        |Completed Items : 12000                      |
+        // |                                        |Items/Min       : 11323                      |
+        // |                                        |                                             |
+        // |                                        |Computer     Completed Items     Items/Min   |
+        // |                                        |pc17         1023                102.4       |
+        // |                                        |mini-1       967                 88.6        |
+        // |                                        |mini-2       988                 90.1        |
+        // |                                        |                                             |
+        // +----------------------------------------+---------------------------------------------+
+        // |                                                                                      |
+        // |                                                                                      |
+        // |                                                                                      |
+        // |                                                                                      |
+        // +----------------------------------------+---------------------------------------------+
+        //
+
         static void Main(string[] args)
         {
-            ConsolePosition.SetConsolePosition();
+            ConsolePosition.SetControllerMasterConsolePosition(m_ConsoleHeight, m_ConsoleWidth);
             ReadControllerConfig();
             SetUpConsoleWindow();
             InitializeLog();
@@ -61,7 +90,6 @@ namespace OxRun
 
         private static void SetUpConsoleWindow()
         {
-            Console.SetWindowSize(ConsoleConstants.Width, ConsoleConstants.Height);
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.SetCursorPosition(0, 0);
             Console.Write("ControllerMaster: ");
@@ -107,7 +135,7 @@ namespace OxRun
                     }
 
                     UpdateConsole();
-                    Console.SetCursorPosition("Command: ".Length, ConsoleConstants.Height - 4);
+                    Console.SetCursorPosition("Command: ".Length, m_ConsoleHeight - 4);
                 }
 
             });
@@ -118,10 +146,10 @@ namespace OxRun
         {
             while (true)
             {
-                Console.SetCursorPosition(0, ConsoleConstants.Height - 4);
-                Console.Write("".PadRight(ConsoleConstants.Width));
+                Console.SetCursorPosition(0, m_ConsoleHeight - 4);
+                Console.Write("".PadRight(m_ConsoleWidth));
 
-                Console.SetCursorPosition(0, ConsoleConstants.Height - 4);
+                Console.SetCursorPosition(0, m_ConsoleHeight - 4);
                 Console.ForegroundColor = ConsoleColor.White;
                 Console.Write("Command: ");
                 var pCmd = GetCommand();
@@ -500,7 +528,7 @@ namespace OxRun
 
         private static Command GetCommand()
         {
-            Console.SetCursorPosition("Command: ".Length, ConsoleConstants.Height - 4);
+            Console.SetCursorPosition("Command: ".Length, m_ConsoleHeight - 4);
 
             string cmd = Console.ReadLine();
             Command command = new Command();
@@ -572,14 +600,14 @@ namespace OxRun
         private static void UpdateConsole()
         {
             int row = 1;
-            foreach (var item in m_ConsoleOutput.Reverse<ConsoleOutputLine>().Take(ConsoleConstants.Height - 5).Reverse())
+            foreach (var item in m_ConsoleOutput.Reverse<ConsoleOutputLine>().Take(m_ConsoleHeight - 5).Reverse())
             {
                 Console.SetCursorPosition(0, row++);
                 Console.ForegroundColor = item.Color;
                 var textToWrite = item.Text;
-                if (textToWrite.Length >= ConsoleConstants.Width - 1)
-                    textToWrite = textToWrite.Substring(0, ConsoleConstants.Width - 1);
-                Console.Write(textToWrite.PadRight(ConsoleConstants.Width));
+                if (textToWrite.Length >= m_ConsoleWidth - 1)
+                    textToWrite = textToWrite.Substring(0, m_ConsoleWidth - 1);
+                Console.Write(textToWrite.PadRight(m_ConsoleWidth));
             }
         }
 
@@ -602,13 +630,13 @@ namespace OxRun
             m_ControllerMasterQueue = null;
             if (MessageQueue.Exists(controllerMasterQueueName))
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Queue already exists, clearning {0}", controllerMasterQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Clearing {0}", controllerMasterQueueName));
                 m_ControllerMasterQueue = new MessageQueue(controllerMasterQueueName);
                 Runner.ClearQueue(m_ControllerMasterQueue);
             }
             else
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Creating queue {0}", controllerMasterQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Creating {0}", controllerMasterQueueName));
                 m_ControllerMasterQueue = MessageQueue.Create(controllerMasterQueueName, false);
                 Runner.ClearQueue(m_ControllerMasterQueue);
             }
@@ -622,13 +650,13 @@ namespace OxRun
             m_ControllerMasterStatusQueue = null;
             if (MessageQueue.Exists(controllerMasterStatusQueueName))
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Queue already exists, clearing {0}", controllerMasterStatusQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Clearing {0}", controllerMasterStatusQueueName));
                 m_ControllerMasterStatusQueue = new MessageQueue(controllerMasterStatusQueueName);
                 Runner.ClearQueue(m_ControllerMasterStatusQueue);
             }
             else
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Creating queue {0}", controllerMasterStatusQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Creating {0}", controllerMasterStatusQueueName));
                 m_ControllerMasterStatusQueue = MessageQueue.Create(controllerMasterStatusQueueName, false);
                 Runner.ClearQueue(m_ControllerMasterStatusQueue);
             }
@@ -638,13 +666,13 @@ namespace OxRun
             m_ControllerMasterIsAliveQueue = null;
             if (MessageQueue.Exists(controllerMasterIsAliveQueueName))
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Queue already exists, clearing {0}", controllerMasterIsAliveQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Clearing {0}", controllerMasterIsAliveQueueName));
                 m_ControllerMasterIsAliveQueue = new MessageQueue(controllerMasterIsAliveQueueName);
                 Runner.ClearQueue(m_ControllerMasterIsAliveQueue);
             }
             else
             {
-                PrintToConsole(ConsoleColor.White, string.Format("Creating queue {0}", controllerMasterIsAliveQueueName));
+                PrintToConsole(ConsoleColor.White, string.Format("Creating {0}", controllerMasterIsAliveQueueName));
                 m_ControllerMasterIsAliveQueue = MessageQueue.Create(controllerMasterIsAliveQueueName, false);
                 Runner.ClearQueue(m_ControllerMasterIsAliveQueue);
             }
