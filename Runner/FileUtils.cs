@@ -49,6 +49,10 @@ namespace OxRun
                     dir.Create();
                     break;
                 }
+                catch (UnauthorizedAccessException)
+                {
+                    System.Threading.Thread.Sleep(50);
+                }
                 catch (IOException)
                 {
                     System.Threading.Thread.Sleep(50);
@@ -66,6 +70,10 @@ namespace OxRun
                 {
                     File.Copy(sourceFile.FullName, destFile.FullName);
                     break;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    System.Threading.Thread.Sleep(50);
                 }
                 catch (IOException)
                 {
@@ -85,6 +93,10 @@ namespace OxRun
                     File.WriteAllText(file.FullName, "");
                     break;
                 }
+                catch (UnauthorizedAccessException)
+                {
+                    System.Threading.Thread.Sleep(50);
+                }
                 catch (IOException)
                 {
                     System.Threading.Thread.Sleep(50);
@@ -101,6 +113,10 @@ namespace OxRun
                 {
                     File.AppendAllLines(file.FullName, strings);
                     break;
+                }
+                catch (UnauthorizedAccessException)
+                {
+                    System.Threading.Thread.Sleep(50);
                 }
                 catch (IOException)
                 {

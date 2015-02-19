@@ -2,6 +2,13 @@
 
     <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\" ExeName="RunnerDaemonXfmTfs.exe" />
   
+    <If MachineName="win8-1">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerMasterXfmTfs\"
+                      ExeName="RunnerMasterXfmTfs.exe"
+                      Args="\\Bigi5-8\e\ TestFileStorage\TestFileStorageFileList.txt" />
+        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\bin\Debug\RunnerDaemonXfmTfs*.exe" />
+    </If>
+  
     <If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerMasterXfmTfs\"
                       ExeName="RunnerMasterXfmTfs.exe"
