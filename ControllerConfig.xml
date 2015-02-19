@@ -5,7 +5,7 @@
     <Computer Name="win8-1"
               MaxConcurrentJobs="8"
               WindowStyle="Normal" />
-    <Computer Name="vaio-qm7"
+    <Computer Name="qm8"
               MaxConcurrentJobs="8"
               WindowStyle="Normal" />
     <Computer Name="bigi5-8"
