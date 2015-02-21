@@ -8,10 +8,38 @@ using System.Security.Cryptography;
 
 namespace OxRun
 {
+    public class RepoItem
+    {
+        public string GuidName;
+        public string Extension;
+        public string Monikers;
+        public FileInfo FiRepoItem;
+        public byte[] ByteArray;
+    }
+
+    public class InternalRepoItem
+    {
+        public string Extension;
+        public string Monikers; // multiple monikers separated by :
+    }
+
     public class Repo
     {
         public DirectoryInfo m_RepoLocation;
         public FileInfo m_FiMonikerCatalog;
+        public Dictionary<string, InternalRepoItem[]> m_repoDictionary = new Dictionary<string, InternalRepoItem[]>();
+
+        private static IEnumerable<string> Lines(StreamReader source)
+        {
+            String line;
+
+            if (source == null)
+                throw new ArgumentNullException("source");
+            while ((line = source.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
 
         public Repo(DirectoryInfo repoLocation)
         {
@@ -20,21 +48,85 @@ namespace OxRun
 
             m_FiMonikerCatalog = new FileInfo(Path.Combine(m_RepoLocation.FullName, "MonikerCatalog.txt"));
             FileUtils.ThreadSafeCreateEmptyTextFileIfNotExist(m_FiMonikerCatalog);
+
+            using (StreamReader sr = new StreamReader(m_FiMonikerCatalog.FullName))
+            {
+                foreach (var line in Lines(sr))
+                {
+                    var spl = line.Split('|');
+                    var repoItem = new InternalRepoItem();
+                    var key = spl[0];
+                    repoItem.Extension = spl[1];
+                    repoItem.Monikers = spl[2];
+                    if (m_repoDictionary.ContainsKey(key))
+                    {
+                        var newInternalRepoItems = m_repoDictionary[key].Concat(new[] { repoItem }).ToArray();
+                        m_repoDictionary[key] = newInternalRepoItems;
+                    }
+                    else
+                        m_repoDictionary.Add(key, new [] {repoItem});
+                }
+            }
+        }
+
+        public RepoItem GetRepoItem(string guid, string extension)
+        {
+            try
+            {
+                var sExtension = extension.TrimStart('.');
+                var internalRepoItems = m_repoDictionary[guid];
+                var internalRepoItem = internalRepoItems.FirstOrDefault(ri => ri.Extension == sExtension);
+                if (internalRepoItem == null)
+                    return null;
+                RepoItem repoItem = new RepoItem();
+                repoItem.GuidName = guid;
+                repoItem.Extension = "." + internalRepoItem.Extension;
+                repoItem.Monikers = internalRepoItem.Monikers;
+                return repoItem;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
+
+        public RepoItem GetRepoItemFileInfo(string guid, string extension)
+        {
+            try
+            {
+                RepoItem repoItem = GetRepoItem(guid, extension);
+                var hashSubDir = guid.Substring(0, 2) + "/";
+                var filename = guid.Substring(2) + repoItem.Extension;
+                repoItem.FiRepoItem = new FileInfo(Path.Combine(m_RepoLocation.FullName, repoItem.Extension.TrimStart('.'), hashSubDir, filename));
+                return repoItem;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
+
+        public RepoItem GetRepoItemByteArray(string guid, string extension)
+        {
+            RepoItem repoItem = GetRepoItemFileInfo(guid, extension);
+            repoItem.ByteArray = File.ReadAllBytes(repoItem.FiRepoItem.FullName);
+            return repoItem;
         }
 
         public void Store(FileInfo file, string moniker)
         {
-            Console.WriteLine("zzz Store entry");
+            // Sometimes the file may just have been written, and the OS is asynchronously finishing the copy.
+            // If the copy is not finished, then get UnauthorizedAccessException, so wait a bit, try again.
             while (true)
             {
                 try
                 {
-                    if (!file.Exists)
-                        throw new ArgumentException(string.Format("File {0} can't be opened", file.FullName));
+                if (!file.Exists)
+                    throw new ArgumentException(string.Format("File {0} does not exist", file.FullName));
                 }
                 catch (System.UnauthorizedAccessException)
                 {
-                    Console.WriteLine("======================================================================================== CAUGHT EXCEPTION FILE EXISTS");
+                    Console.WriteLine("======================================================================================== System.UnauthorizedAccessException");
                     System.Threading.Thread.Sleep(20);
                     continue;
                 }
@@ -44,9 +136,6 @@ namespace OxRun
             string hashString;
             byte[] ba = null;
 
-            Console.WriteLine("zzz after test exists");
-            // Sometimes the file may just have been written, and the OS is asynchronously finishing the copy.
-            // If the copy is not finished, then get UnauthorizedAccessException, so wait a bit, try again.
             while (true)
             {
                 try
@@ -65,14 +154,12 @@ namespace OxRun
                 }
                 catch (System.UnauthorizedAccessException)
                 {
-                    Console.WriteLine("======================================================================================== CAUGHT EXCEPTION ");
+                    Console.WriteLine("======================================================================================== System.UnauthorizedAccessException");
                     System.Threading.Thread.Sleep(20);
                     continue;
                 }
                 break;
             }
-
-            Console.WriteLine("zzz after read all bytes");
 
             string extensionDirName;
             if (file.Extension == "")
@@ -87,21 +174,14 @@ namespace OxRun
             var diHashSubDir = new DirectoryInfo(Path.Combine(m_RepoLocation.FullName, extensionDirName, hashSubDir));
             FileUtils.ThreadSafeCreateDirectory(diHashSubDir);
 
-            Console.WriteLine("zzz after threadsafe create dir");
-
             var fiFileName = new FileInfo(Path.Combine(m_RepoLocation.FullName, extensionDirName, hashSubDir, fileBaseName + file.Extension.ToLower()));
             FileUtils.ThreadSafeCopy(file, fiFileName);
-
-            Console.WriteLine("zzz after threadsafe copy");
 
             FileInfo fiToMakeReadonly = new FileInfo(fiFileName.FullName);
             fiToMakeReadonly.IsReadOnly = true;
 
             if (moniker != null)
-                FileUtils.ThreadSafeAppendAllLines(m_FiMonikerCatalog, new[] { hashString + "|" + moniker });
-
-            Console.WriteLine("zzz after threadsafe AppendAllLines");
-
+                FileUtils.ThreadSafeAppendAllLines(m_FiMonikerCatalog, new[] { hashString + "|" + extensionDirName + "|" + moniker });
         }
     }
 }
