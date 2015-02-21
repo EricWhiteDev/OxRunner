@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Lp = System.IO.LongPath;
 using System.Linq;
 using System.Messaging;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
 
@@ -14,6 +14,8 @@ namespace OxRun
     {
         // NOTE: when changing the name of the class, must change the following line to get the version properly.
         static System.Version m_RunnerAssemblyVersion = typeof(RunnerDaemonXfmTfs).Assembly.GetName().Version;
+        static FileInfo m_FiNamesDict = new FileInfo(@"\\Bigi5-8\e\TestFileStorage-Mash-Names\NamesDict.txt");
+        static Dictionary<string, string> m_DictNames = new Dictionary<string, string>();
 
         static void Main(string[] args)
         {
@@ -31,8 +33,23 @@ namespace OxRun
             runnerDaemon.PrintToConsole(string.Format("MasterRunner machine name: {0}", runnerMasterMachineName));
             runnerDaemon.PrintToConsole(string.Format("Daemon Number: {0}", m_RunnerAssemblyVersion.MinorRevision));
 
+            var mashNames = File.ReadAllLines(m_FiNamesDict.FullName);
+            foreach (var mn in mashNames)
+            {
+                var spl = mn.Split('|');
+                m_DictNames.Add(spl[1], spl[0]);
+            }
+
             runnerDaemon.SendDaemonReadyMessage();
             runnerDaemon.MessageLoop();
+        }
+
+        static string Hydrate(Match m)
+        {
+            // Get the matched string. 
+            string x = m.ToString();
+            string r = m_DictNames[x];
+            return r;
         }
 
         private void MessageLoop()
@@ -58,13 +75,19 @@ namespace OxRun
                     var bailList = new List<string>();
                     foreach (var file in doMessage.Xml.Elements("Documents").Elements("Document").Attributes("Name").Select(a => (string)a))
                     {
-                        string fileWithWidePrefix = null;
+#if false
                         if (file.StartsWith(@"\\") || file.StartsWith("//"))
                             fileWithWidePrefix = @"//?/UNC/" + file.Substring(1);
                         else
                             fileWithWidePrefix = "//?/" + file;
+#endif
                         var moniker = file.Substring(testFileStorageRootLocation.Length);
-                        PrintToConsole("Storing: " + (fileWithWidePrefix.Length > 40 ? fileWithWidePrefix.Substring(fileWithWidePrefix.Length - 40) : fileWithWidePrefix));
+
+                        Regex r = new Regex("~-[0-9]+-~");
+                        MatchEvaluator eval = new MatchEvaluator(Hydrate);
+                        var hydratedMoniker = r.Replace(moniker, eval);
+
+                        PrintToConsole("Storing: " + (hydratedMoniker.Length > 40 ? hydratedMoniker.Substring(hydratedMoniker.Length - 40) : hydratedMoniker));
 
                         var lastDecimal = file.LastIndexOf('.');
                         string extension = null;
@@ -73,7 +96,7 @@ namespace OxRun
                         else
                         {
                             var possibleExtension = file.Substring(lastDecimal);
-                            if (possibleExtension.Length <= 4)
+                            if (possibleExtension.Length <= 5)
                                 extension = possibleExtension;
                             else
                                 extension = "";
@@ -81,7 +104,10 @@ namespace OxRun
 
 
                         var fiTemp = new FileInfo(Path.Combine(diTemp.FullName, Guid.NewGuid().ToString() + extension));
+#if false
                         var lpTemp = "//?/" + fiTemp.FullName;
+#endif
+                        var lpTemp = fiTemp.FullName;
 
                         PrintToConsole("Temp: " + lpTemp);
 
@@ -93,10 +119,11 @@ namespace OxRun
                             {
                                 Console.WriteLine("Bailing on this file");
                                 bail = true;
+                                break;
                             }
                             try
                             {
-                                Lp.File.Copy(fileWithWidePrefix, lpTemp, false);
+                                File.Copy(file, lpTemp, false);
                                 break;
                             }
                             catch (System.ComponentModel.Win32Exception)
@@ -109,8 +136,8 @@ namespace OxRun
                         if (bail)
                         {
                             bailList.Add(file);
+                            continue;
                         }
-                        // 
 
                         while (true)
                         {
@@ -126,11 +153,27 @@ namespace OxRun
                             }
                         }
 
-                        FileAttributes attributes = File.GetAttributes(fiTemp.FullName);
+                        FileAttributes attributes;
+                        while (true)
+                        {
+                            try
+                            {
+                                attributes = File.GetAttributes(fiTemp.FullName);
+                                break;
+                            }
+                            catch (IOException)
+                            {
+                                System.Threading.Thread.Sleep(50);
+                                continue;
+                            }
+                        }
+
+
                         attributes = RemoveAttribute(attributes, FileAttributes.ReadOnly);
                         File.SetAttributes(fiTemp.FullName, attributes);
 
-                        repo.Store(fiTemp, moniker);
+                        PrintToConsole("Calling repo.Store: " + fiTemp.FullName); 
+                        repo.Store(fiTemp, hydratedMoniker);
 
                         while (true)
                         {
@@ -175,14 +218,15 @@ namespace OxRun
                             new XAttribute("Val", Environment.MachineName)),
                         new XElement("RunnerDaemonQueueName",
                             new XAttribute("Val", m_RunnerDaemonLocalQueueName)),
-                        doMessage.Xml.Element("Documents").Elements("Document").Select(d => {
-                            bool bailed = bailList.Contains(d.Attribute("Name").Value);
-                            if (bailed)
-                                return new XElement("Document",
-                                    d.Attributes(),
-                                    new XAttribute("CopyFailed", true));
-                            return new XElement("Document", d.Attributes());
-                        }));
+                        new XElement("Documents",
+                            doMessage.Xml.Element("Documents").Elements("Document").Select(d => {
+                                bool bailed = bailList.Contains(d.Attribute("Name").Value);
+                                if (bailed)
+                                    return new XElement("Document",
+                                        d.Attributes(),
+                                        new XAttribute("CopyFailed", true));
+                                return new XElement("Document", d.Attributes());
+                            })));
                     Runner.SendMessage("WorkComplete", cmsg, m_RunnerMasterMachineName, OxRunConstants.RunnerMasterQueueName);
                 }
             }

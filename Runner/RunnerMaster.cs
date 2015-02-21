@@ -159,6 +159,11 @@ namespace OxRun
             m_RunnerLog.Log(ConsoleColor.White, text);
         }
 
+        public void PrintToLog(string text)
+        {
+            m_RunnerLog.LogOnly(text);
+        }
+
         public void PrintToConsole(ConsoleColor color, string text)
         {
             m_RunnerLog.Log(color, text);

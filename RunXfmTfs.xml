@@ -12,7 +12,7 @@
     <If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerMasterXfmTfs\"
                       ExeName="RunnerMasterXfmTfs.exe"
-                      Args="\\Bigi5-8\e\ TestFileStorage\TestFileStorageFileList.txt" />
+                      Args="\\Bigi5-8\e\ TestFileStorage-Mash-Names\MashNamesList.txt" />
         <Run Exe="\\Bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerXfmTfs\RunnerDaemonXfmTfs\bin\Debug\RunnerDaemonXfmTfs*.exe" />
     </If>
   

@@ -14,10 +14,12 @@ namespace OxRun
         static DirectoryInfo m_DiRepo;
         static string m_TestFileStorageRootLocation = null;
         static string m_TestFileStorageFileList = null;
-        static string[] m_FilesToProcess;
-        static Dictionary<string, bool> m_RemainingFiles;
+        static IEnumerable<string> m_FilesToProcess;
+        static Dictionary<string, bool> m_RemainingFiles = new Dictionary<string,bool>();
         static List<List<string>> m_Jobs;
         static int m_NumberOfClientComputers;
+
+        static int? m_LimitFileCount = null;
 
         static void Main(string[] args)
         {
@@ -44,16 +46,33 @@ namespace OxRun
 
         private void InitializeWork()
         {
+            PrintToConsole(ConsoleColor.White, "InitializeWork entry zzz");
+
             FileInfo fiFileList = new FileInfo(m_TestFileStorageRootLocation + m_TestFileStorageFileList);
             m_FilesToProcess = File.ReadAllLines(fiFileList.FullName);
-            m_RemainingFiles = new Dictionary<string, bool>();
+
+            PrintToConsole(ConsoleColor.White, "InitializeWork before calling toarray creating small list zzz");
+
+            if (m_LimitFileCount != null)
+                m_FilesToProcess = m_FilesToProcess.Take((int)m_LimitFileCount).ToArray();
+
+            PrintToConsole(ConsoleColor.White, "InitializeWork after read all lines zzz");
+
             foreach (var item in m_FilesToProcess)
                 m_RemainingFiles.Add(item, false);
 
+            PrintToConsole(ConsoleColor.White, "InitializeWork after adding to files to process zzz");
+
             m_Jobs = DivvyIntoJobs(m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
 
-            m_DiRepo = FileUtils.GetDateTimeStampedDirectoryInfo("//bigi5-8/c/TestFileRepo");
+            PrintToConsole(ConsoleColor.White, "InitializeWork after divvy into jobs zzz");
+
+            PrintToConsole(ConsoleColor.White, "InitializeWork before creating new repo zzz");
+
+            m_DiRepo = FileUtils.GetDateTimeStampedDirectoryInfo(@"\\bigi5-8\c\TestFileRepo");
             var repo = new Repo(m_DiRepo);
+
+            PrintToConsole(ConsoleColor.White, "InitializeWork after creating new repo zzz");
 
             PrintToConsole(ConsoleColor.White, string.Format("Creating Repo {0}", m_DiRepo.FullName));
         }
@@ -76,6 +95,7 @@ namespace OxRun
             {
                 var documents = message.Xml.Element("Documents");
                 PrintToConsole(string.Format("Received WorkComplete, File count: {0}", documents.Elements("Document").Count()));
+                PrintToLog(documents.ToString());
 
                 foreach (var doc in documents.Elements("Document").Attributes("Name").Select(a => (string)a))
                 {
@@ -121,6 +141,8 @@ namespace OxRun
                 new XElement("Documents",
                     thisJob.Select(item => new XElement("Document",
                         new XAttribute("Name", m_TestFileStorageRootLocation + item)))));
+
+
             //var s = cmsg.ToString().Split(new [] {"\r\n"}, StringSplitOptions.None);
             //foreach (var item in s)
             //    PrintToConsole(item);

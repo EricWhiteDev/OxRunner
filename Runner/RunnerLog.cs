@@ -25,5 +25,11 @@ namespace OxRun
             if (m_WriteLog)
                 File.AppendAllLines(m_FiLog.FullName, new[] { text });
         }
+
+        public void LogOnly(string text)
+        {
+            if (m_WriteLog)
+                File.AppendAllLines(m_FiLog.FullName, new[] { text });
+        }
     }
 }
