@@ -183,5 +183,38 @@ namespace OxRun
             if (moniker != null)
                 FileUtils.ThreadSafeAppendAllLines(m_FiMonikerCatalog, new[] { hashString + "|" + extensionDirName + "|" + moniker });
         }
+
+        public void RebuildMonikerFile(FileInfo fiNewMonikerFile)
+        {
+            List<string> monikerContent = new List<string>();
+            GetFileList(m_RepoLocation, monikerContent);
+            File.WriteAllLines(fiNewMonikerFile.FullName, monikerContent.ToArray());
+        }
+
+        private void GetFileList(DirectoryInfo di, List<string> fileList)
+        {
+            // iterate through extension directories
+            foreach (var extensionDir in di.GetDirectories())
+            {
+                // iterate through 2 char sha1 dirs
+                foreach (var sha1Dir in extensionDir.GetDirectories())
+                {
+                    // iterate through files in each extension dir
+                    foreach (var sha1File in sha1Dir.GetFiles())
+                    {
+                        var nameWithoutExtension = sha1File.Name.Substring(0, sha1File.Name.Length - sha1File.Extension.Length);
+                        var sha1 = sha1Dir.Name + nameWithoutExtension;
+                        if (m_repoDictionary.ContainsKey(sha1))
+                        {
+                            var listRepoItems = m_repoDictionary[sha1];
+                            var repoItem = listRepoItems.FirstOrDefault(ri => ri.Extension.TrimStart('.').ToLower() == sha1File.Extension.TrimStart('.').ToLower());
+                            if (repoItem == null)
+                                throw new Exception("What????");
+                            fileList.Add(string.Format("{0}|{1}|{2}", sha1, sha1File.Extension.TrimStart('.').ToLower(), repoItem.Monikers));
+                        }
+                    }
+                }
+            }
+        }
     }
 }
