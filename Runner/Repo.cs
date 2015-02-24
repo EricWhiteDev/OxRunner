@@ -69,18 +69,20 @@ namespace OxRun
             }
         }
 
-        public RepoItem GetRepoItem(string guid, string extension)
+        public RepoItem GetRepoItem(string guidName)
         {
+            var spl = guidName.Split('.');
+            var guid = spl[0];
+            var extension = "." + spl[1];
             try
             {
-                var sExtension = extension.TrimStart('.');
                 var internalRepoItems = m_repoDictionary[guid];
-                var internalRepoItem = internalRepoItems.FirstOrDefault(ri => ri.Extension == sExtension);
+                var internalRepoItem = internalRepoItems.FirstOrDefault(ri => ri.Extension == extension);
                 if (internalRepoItem == null)
                     return null;
                 RepoItem repoItem = new RepoItem();
                 repoItem.GuidName = guid;
-                repoItem.Extension = "." + internalRepoItem.Extension;
+                repoItem.Extension = internalRepoItem.Extension;
                 repoItem.Monikers = internalRepoItem.Monikers;
                 return repoItem;
             }
@@ -90,13 +92,13 @@ namespace OxRun
             }
         }
 
-        public RepoItem GetRepoItemFileInfo(string guid, string extension)
+        public RepoItem GetRepoItemFileInfo(string guidName)
         {
             try
             {
-                RepoItem repoItem = GetRepoItem(guid, extension);
-                var hashSubDir = guid.Substring(0, 2) + "/";
-                var filename = guid.Substring(2) + repoItem.Extension;
+                RepoItem repoItem = GetRepoItem(guidName);
+                var hashSubDir = guidName.Substring(0, 2) + "/";
+                var filename = guidName.Substring(2);
                 repoItem.FiRepoItem = new FileInfo(Path.Combine(m_RepoLocation.FullName, repoItem.Extension.TrimStart('.'), hashSubDir, filename));
                 return repoItem;
             }
@@ -106,9 +108,9 @@ namespace OxRun
             }
         }
 
-        public RepoItem GetRepoItemByteArray(string guid, string extension)
+        public RepoItem GetRepoItemByteArray(string guidName)
         {
-            RepoItem repoItem = GetRepoItemFileInfo(guid, extension);
+            RepoItem repoItem = GetRepoItemFileInfo(guidName);
             repoItem.ByteArray = File.ReadAllBytes(repoItem.FiRepoItem.FullName);
             return repoItem;
         }
@@ -207,14 +209,76 @@ namespace OxRun
                         if (m_repoDictionary.ContainsKey(sha1))
                         {
                             var listRepoItems = m_repoDictionary[sha1];
-                            var repoItem = listRepoItems.FirstOrDefault(ri => ri.Extension.TrimStart('.').ToLower() == sha1File.Extension.TrimStart('.').ToLower());
+                            var repoItem = listRepoItems.FirstOrDefault(ri => ri.Extension.ToLower() == sha1File.Extension.ToLower());
                             if (repoItem == null)
                                 throw new Exception("What????");
-                            fileList.Add(string.Format("{0}|{1}|{2}", sha1, sha1File.Extension.TrimStart('.').ToLower(), repoItem.Monikers));
+                            fileList.Add(string.Format("{0}|{1}|{2}", sha1, sha1File.Extension.ToLower(), repoItem.Monikers));
                         }
                     }
                 }
             }
+        }
+
+        public IEnumerable<string> GetAllOpenXmlFiles()
+        {
+            var retValue = m_repoDictionary
+                .Select(di => new
+                {
+                    GuidId = di.Key,
+                    ItemList = di.Value,
+                })
+                .SelectMany(ri =>
+                {
+                    var openXmlItems = ri.ItemList
+                        .Where(z =>
+                            IsWordprocessingML(z.Extension) ||
+                            IsSpreadsheetML(z.Extension) ||
+                            IsPresentationML(z.Extension))
+                        .Select(z => ri.GuidId + z.Extension);
+                    return openXmlItems;
+                })
+                .ToList();
+            return retValue;
+        }
+
+        public static string[] WordprocessingExtensions = new[] {
+            ".docx",
+            ".docm",
+            ".dotx",
+            ".dotm",
+        };
+
+        public static bool IsWordprocessingML(string ext)
+        {
+            return WordprocessingExtensions.Contains(ext.ToLower());
+        }
+
+        public static string[] SpreadsheetExtensions = new[] {
+            ".xlsx",
+            ".xlsm",
+            ".xltx",
+            ".xltm",
+            ".xlam",
+        };
+
+        public static bool IsSpreadsheetML(string ext)
+        {
+            return SpreadsheetExtensions.Contains(ext.ToLower());
+        }
+
+        public static string[] PresentationExtensions = new[] {
+            ".pptx",
+            ".potx",
+            ".ppsx",
+            ".pptm",
+            ".potm",
+            ".ppsm",
+            ".ppam",
+        };
+
+        public static bool IsPresentationML(string ext)
+        {
+            return PresentationExtensions.Contains(ext.ToLower());
         }
     }
 }

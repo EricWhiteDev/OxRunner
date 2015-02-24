@@ -1,0 +1,19 @@
+<Commands>
+
+    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\" ExeName="RunnerDaemonCatalog.exe" />
+  
+    <If MachineName="bigi5-8">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
+                      ExeName="RunnerMasterCatalog.exe"
+                      Args="\\Bigi5-8\c\TestFileRepo" />
+        <Run Exe="\\Bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
+    </If>
+  
+    <If MachineName="pc17">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
+                      ExeName="RunnerMasterCatalog.exe"
+                      Args="C:\TestFileRepoSmall" />
+        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
+    </If>
+
+</Commands>

@@ -15,6 +15,7 @@ namespace OxRun
         MessageQueue m_RunnerMasterQueue;
         MessageQueue m_RunnerMasterIsAliveQueue;
         public RunnerLog m_RunnerLog;
+        public string m_MasterMachineName;
 
         public RunnerMaster()
         {
@@ -82,6 +83,7 @@ namespace OxRun
                 daemonMessage.Xml = doMessage.Xml;
                 daemonMessage.RunnerDaemonMachineName = (string)doMessage.Xml.Elements("RunnerDaemonMachineName").Attributes("Val").FirstOrDefault();
                 daemonMessage.RunnerDaemonQueueName = (string)doMessage.Xml.Elements("RunnerDaemonQueueName").Attributes("Val").FirstOrDefault();
+                daemonMessage.MessageSize = doMessage.MessageSize;
                 processMessage(daemonMessage);
             }
         }
@@ -99,7 +101,7 @@ namespace OxRun
                 Environment.Exit(0);
             }
 
-            var masterMachineName = (string)doMessage.Xml.Elements("MasterMachineName").Attributes("Val").FirstOrDefault();
+            m_MasterMachineName = (string)doMessage.Xml.Elements("MasterMachineName").Attributes("Val").FirstOrDefault();
 
             //     <=<=<=<=<=<=<=<=<=<=<=<= Receive Ping sent by Controller Master <=<=<=<=<=<=<=<=<=<=<=<=
             if (doMessage.Label == "Ping")
@@ -111,7 +113,7 @@ namespace OxRun
                 var cmsg = new XElement("Message",
                     new XElement("MasterMachineName",
                         new XAttribute("Val", Environment.MachineName)));
-                Runner.SendMessage("Pong", cmsg, masterMachineName, OxRunConstants.ControllerMasterIsAliveQueueName);
+                Runner.SendMessage("Pong", cmsg, m_MasterMachineName, OxRunConstants.ControllerMasterIsAliveQueueName);
             }
         }
 
@@ -127,7 +129,7 @@ namespace OxRun
                 if (currentJob == null)
                 {
                     currentJob = new List<string>();
-                    itemsInThisJob = CalcItemsInCurrentJob(remainingItems, totalWorkDaemons, 500);
+                    itemsInThisJob = CalcItemsInCurrentJob(remainingItems, totalWorkDaemons, 300);
                 }
                 currentJob.Add(item);
                 itemsInThisJob--;
@@ -148,7 +150,7 @@ namespace OxRun
 
         private int CalcItemsInCurrentJob(int remainingItems, int totalWorkDaemons, int maxPerJob)
         {
-            int itemsInCurrentJob = (remainingItems / totalWorkDaemons) / 2;
+            int itemsInCurrentJob = (remainingItems / totalWorkDaemons) / 30;
             itemsInCurrentJob = Math.Min(itemsInCurrentJob, maxPerJob);
             itemsInCurrentJob = Math.Max(itemsInCurrentJob, 1);
             return itemsInCurrentJob;

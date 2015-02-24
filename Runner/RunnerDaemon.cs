@@ -16,6 +16,7 @@ namespace OxRun
         public XElement Xml;
         public string RunnerDaemonMachineName;
         public string RunnerDaemonQueueName;
+        public int MessageSize;
     }
 
     public class RunnerDaemon

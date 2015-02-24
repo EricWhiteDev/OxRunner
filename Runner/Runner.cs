@@ -28,6 +28,7 @@ namespace OxRun
         public string Label;
         public XElement Xml;
         public bool Timeout;
+        public int MessageSize;
     }
 
     public class Runner
@@ -73,6 +74,7 @@ namespace OxRun
             oxMessage.Label = message.Label;
             var text = message.Body.ToString(); 
             oxMessage.Xml = XElement.Parse(text);
+            oxMessage.MessageSize = text.Length;
             return oxMessage;
         }
 

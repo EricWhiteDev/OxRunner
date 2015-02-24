@@ -25,6 +25,9 @@ namespace OxRun
         static FileInfo m_FiLog = null;
         static string m_Editor = null;
 
+        static XElement m_CurrentReport = null;
+        static string m_CurrentReportName = null;
+
         static int m_ConsoleHeight = 40;
         static int m_ConsoleWidth = 80;
         static int m_LogWidth = 40;
@@ -132,6 +135,34 @@ namespace OxRun
                         {
                             PrintToConsole(ConsoleColor.White, string.Format("ProcessList:  Daemon: {0}  Process Id: {1}", daemonMachineName, (string)item.Attribute("ProcessId")));
                         }
+                    }
+                    else if (doMessage.Label == "ReportStart")
+                    {
+                        PrintToConsole(ConsoleColor.White, "Received Report Start");
+                        m_CurrentReportName = (string)doMessage.Xml.Elements("ReportName").Attributes("Val").FirstOrDefault();
+                        if (m_CurrentReportName == null)
+                            throw new Exception("What????");  // todo fix exception message
+                        m_CurrentReport = new XElement("Report",
+                            new XAttribute("Name", m_CurrentReportName),
+                            new XElement("Documents"));
+                    }
+                    else if (doMessage.Label == "Report")
+                    {
+                        PrintToConsole(ConsoleColor.White, "Received Report");
+                        var currentReportName = (string)doMessage.Xml.Elements("ReportName").Attributes("Val").FirstOrDefault();
+                        if (m_CurrentReportName != currentReportName)
+                            throw new Exception("What????");  // todo fix exception message
+                        m_CurrentReport.Element("Documents").Add(doMessage.Xml.Elements("Documents").Elements());
+                    }
+                    else if (doMessage.Label == "ReportComplete")
+                    {
+                        PrintToConsole(ConsoleColor.White, "Received Report Complete");
+                        var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../m_CurrentReportName, ".xml");
+                        var sortedReport = new XElement("Report",
+                            m_CurrentReport.Attributes(),
+                            new XElement("Documents",
+                                m_CurrentReport.Elements("Documents").Elements().OrderBy(d => (string)d.Attribute("GuidName"))));
+                        sortedReport.Save(reportFile.FullName);
                     }
 
                     UpdateConsole();
