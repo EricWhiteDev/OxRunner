@@ -27,8 +27,8 @@ namespace OxRun
             Console.ForegroundColor = ConsoleColor.White;
             ConsolePosition.SetConsolePosition();
 
-#if false
-            FileInfo fi = new FileInfo(@"C:\TestFileRepoSmall\docx\00\0AC0B9C810EF4F2C26958DDBFE1205E8CF1034.docx");
+#if true
+            FileInfo fi = new FileInfo(@"C:\TestFileRepo\xlsx\00\00059253606EA3001619D73993922C2E39D38F.xlsx");
             MetricsGetterSettings metricsGetterSettings = new MetricsGetterSettings();
             metricsGetterSettings.IncludeTextInContentControls = false;
             metricsGetterSettings.IncludeXlsxTableCellData = false;
@@ -101,7 +101,7 @@ namespace OxRun
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("PowerToolsDocumentException",
-                                            e.ToString()));
+                                            MakeValidXml(e.ToString())));
                                     return errorXml;
                                 }
                                 catch (FileFormatException e)
@@ -109,7 +109,7 @@ namespace OxRun
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("FileFormatException",
-                                            e.ToString()));
+                                            MakeValidXml(e.ToString())));
                                     return errorXml;
                                 }
                                 catch (Exception e)
@@ -117,13 +117,28 @@ namespace OxRun
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("Exception",
-                                            e.ToString()));
+                                            MakeValidXml(e.ToString())));
                                     return errorXml;
                                 }
                             })));
                     Runner.SendMessage("WorkComplete", cmsg, m_RunnerMasterMachineName, OxRunConstants.RunnerMasterQueueName);
                 }
             }
+        }
+
+        private static string MakeValidXml(string p)
+        {
+            if (!p.Any(c => c < 0x20))
+                return p;
+            var newP = p
+                .Select(c =>
+                {
+                    if (c < 0x20)
+                        return string.Format("_{0:X}_", (int)c);
+                    return c.ToString();
+                })
+                .StringConcatenate();
+            return newP;
         }
 
         private void InitRepoIfNecessary(DirectoryInfo repoLocation)

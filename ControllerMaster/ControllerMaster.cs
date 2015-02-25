@@ -157,7 +157,7 @@ namespace OxRun
                     else if (doMessage.Label == "ReportComplete")
                     {
                         PrintToConsole(ConsoleColor.White, "Received Report Complete");
-                        var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../m_CurrentReportName, ".xml");
+                        var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../m_CurrentReportName", ".xml");
                         var sortedReport = new XElement("Report",
                             m_CurrentReport.Attributes(),
                             new XElement("Documents",

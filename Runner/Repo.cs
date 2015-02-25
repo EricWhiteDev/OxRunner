@@ -60,8 +60,17 @@ namespace OxRun
                     repoItem.Monikers = spl[2];
                     if (m_repoDictionary.ContainsKey(key))
                     {
-                        var newInternalRepoItems = m_repoDictionary[key].Concat(new[] { repoItem }).ToArray();
-                        m_repoDictionary[key] = newInternalRepoItems;
+                        var repoDictionaryEntry = m_repoDictionary[key];
+                        var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
+                        if (existingItemWithSameExtension != null)
+                        {
+                            existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
+                        }
+                        else
+                        {
+                            var newInternalRepoItems = repoDictionaryEntry.Concat(new[] { repoItem }).ToArray();
+                            m_repoDictionary[key] = newInternalRepoItems;
+                        }
                     }
                     else
                         m_repoDictionary.Add(key, new [] {repoItem});
