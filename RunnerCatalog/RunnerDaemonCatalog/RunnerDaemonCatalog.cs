@@ -24,9 +24,6 @@ namespace OxRun
 
         static void Main(string[] args)
         {
-            Console.ForegroundColor = ConsoleColor.White;
-            ConsolePosition.SetConsolePosition(m_RunnerAssemblyVersion.MinorRevision);
-
 #if false
             FileInfo fi = new FileInfo(@"C:\TestFileRepo\xlsx\00\00059253606EA3001619D73993922C2E39D38F.xlsx");
             MetricsGetterSettings metricsGetterSettings = new MetricsGetterSettings();
@@ -43,6 +40,10 @@ namespace OxRun
                 throw new ArgumentException("ControllerDaemon did not pass any arguments to RunnerDaemon");
 
             string runnerMasterMachineName = args[0];
+
+            Console.ForegroundColor = ConsoleColor.White;
+            ConsolePosition.SetConsolePosition(m_RunnerAssemblyVersion.MinorRevision - 1,
+                Environment.MachineName.ToLower() == runnerMasterMachineName.ToLower());
 
             // MinorRevision will be unique for each daemon, so we append it for the daemon queue name.
             var runnerDaemon = new RunnerDaemonCatalog(runnerMasterMachineName, m_RunnerAssemblyVersion.MinorRevision);

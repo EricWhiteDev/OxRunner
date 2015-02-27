@@ -23,7 +23,7 @@ namespace OxRun
 
         static void Main(string[] args)
         {
-            ConsolePosition.SetConsolePosition(8);
+            ConsolePosition.SetConsolePosition(8, true);
             if (args.Length != 4)
             {
                 throw new ArgumentException("Arguments to RunnerMaster are incorrect.  Should be 1) number of client computers, 2) doc repo location, 3) Skip, 4) Take");

@@ -36,90 +36,16 @@ namespace OxRun
         [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
         public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
 
-        private static int m_TopOffset = 500;
+        private static int m_TopOffsetMaster = 500;
+        private static int m_TopOffsetNonMaster = 300;
         private static int m_LeftOffset = 5;
 
         private static int m_Width = 120;
         private static int m_Height = 500;
 
-        static ConsoleRectangle[] m_ConsoleInfo = new[] {
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 1,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 2,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 3,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 4,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 5,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 6,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 7,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 8,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 9,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 10,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 11,
-                Height = m_Height,
-                Width = m_Width,
-            },
-            new ConsoleRectangle() {
-                Top = m_TopOffset,
-                Left = m_LeftOffset + m_Width * 12,
-                Height = m_Height,
-                Width = m_Width,
-            },
-        };
-
         public static void SetControllerDaemonConsolePosition(int height, int width)
         {
-            SetWindowPos(MyConsole, 0, m_LeftOffset, m_TopOffset, 0, 0, SWP_NOSIZE);
+            SetWindowPos(MyConsole, 0, m_LeftOffset, m_TopOffsetNonMaster, 0, 0, SWP_NOSIZE);
             Console.SetWindowSize(width, height);
         }
 
@@ -129,9 +55,27 @@ namespace OxRun
             Console.SetWindowSize(width, height);
         }
 
-        public static void SetConsolePosition(int positionNumber)
+        public static void SetConsolePosition(int positionNumber, bool isMasterMachine)
         {
-            MoveWindow(m_ConsoleInfo[positionNumber]);
+            ConsoleRectangle cr = null;
+            if (isMasterMachine)
+                cr = new ConsoleRectangle()
+                {
+                    Top = m_TopOffsetMaster,
+                    Left = m_LeftOffset + m_Width * 1,
+                    Height = m_Height,
+                    Width = m_Width,
+                };
+            else
+                cr = new ConsoleRectangle()
+                {
+                    Top = m_TopOffsetNonMaster,
+                    Left = m_LeftOffset + m_Width * 1,
+                    Height = m_Height,
+                    Width = m_Width,
+                };
+
+            MoveWindow(cr);
         }
 
         private static void MoveWindow(ConsoleRectangle rect)
