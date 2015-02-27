@@ -1,19 +1,33 @@
 <Commands>
 
+	<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
+		
     <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\" ExeName="RunnerDaemonCatalog.exe" />
   
-    <If MachineName="bigi5-8">
+    <!--If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
                       Args="\\Bigi5-8\c\TestFileRepo" />
         <Run Exe="\\Bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
+    </If-->
+  
+    <If MachineName="win8-1">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
+                      ExeName="RunnerMasterCatalog.exe"
+                      Args="\\Bigi5-8\c\TestFileRepo"
+					  Skip="null" 
+					  Take="5000" 
+					  />
+        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
     </If>
   
-    <If MachineName="pc17">
+    <!--If MachineName="pc17">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
                       Args="C:\TestFileRepoSmall" />
         <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
-    </If>
+    </If-->
 
 </Commands>

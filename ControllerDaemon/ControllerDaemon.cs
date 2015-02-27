@@ -23,8 +23,7 @@ namespace OxRun
             m_XdConfig = XDocument.Load(fiConfig.FullName);
             m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
 
-            ConsolePosition.ResetConsolePositioning();
-            ConsolePosition.SetConsolePosition();
+            ConsolePosition.SetControllerDaemonConsolePosition(ConsoleConstants.Height, ConsoleConstants.Width);
             Console.ForegroundColor = ConsoleColor.DarkGray;
             Console.Write("ControllerDaemon: ");
             Console.ForegroundColor = ConsoleColor.White;

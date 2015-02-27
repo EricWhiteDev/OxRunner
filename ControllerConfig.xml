@@ -2,6 +2,7 @@
 <Config>
   <Editor Val="np" />
   <WriteLog Val="false" />
+  <CollectProcessTimeMetrics Val="true" />
   <Computers>
     <Computer Name="win8-1"
               MaxConcurrentJobs="8"

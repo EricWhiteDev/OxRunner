@@ -21,7 +21,8 @@ namespace OxRun
         public XDocument m_XdConfig;
         public string m_Editor = null;
         public bool? m_WriteLog = null;
-
+        public bool? m_CollectProcessTimeMetrics = null;
+        public bool m_Verbose = false;
 
         public RunnerMaster()
         {
@@ -77,6 +78,7 @@ namespace OxRun
             m_XdConfig = XDocument.Load(m_FiConfig.FullName);
             m_Editor = (string)m_XdConfig.Root.Elements("Editor").Attributes("Val").FirstOrDefault();
             m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
+            m_CollectProcessTimeMetrics = (bool?)m_XdConfig.Root.Elements("CollectProcessTimeMetrics").Attributes("Val").FirstOrDefault();
         }
 
 
@@ -84,7 +86,8 @@ namespace OxRun
         {
             while (true)
             {
-                PrintToConsole("Waiting for message");
+                if (m_Verbose)
+                    PrintToConsole("Waiting for message");
 
                 // <=<=<=<=<=<=<=<=<=<=<=<= Receive message sent by RunnerDaemon <=<=<=<=<=<=<=<=<=<=<=<=
                 OxMessage doMessage = null;
@@ -107,7 +110,8 @@ namespace OxRun
 
         public void ReceivePingSendPong()
         {
-            PrintToConsole("Waiting for message");
+            if (m_Verbose)
+                PrintToConsole("Waiting for message");
 
             // <=<=<=<=<=<=<=<=<=<=<=<= Receive message sent by ControllerMaster <=<=<=<=<=<=<=<=<=<=<=<=
             var doMessage = Runner.ReceiveMessage(m_RunnerMasterIsAliveQueue, 20);
@@ -134,10 +138,48 @@ namespace OxRun
             }
         }
 
-        public List<List<string>> DivvyIntoJobs(IEnumerable<string> workItems, int totalWorkDaemons)
+        private static IEnumerable<string> Lines(StreamReader source)
         {
+            String line;
+
+            if (source == null)
+                throw new ArgumentNullException("source");
+            while ((line = source.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
+        public List<List<string>> DivvyIntoJobs(Repo repo, IEnumerable<string> workItems, int totalWorkDaemons)
+        {
+            var fiProcessTimeMetrics = new FileInfo(Path.Combine(repo.m_RepoLocation.FullName, "ProcessTimeMetrics.txt"));
+            Dictionary<string, long> processTimeMetrics = new Dictionary<string,long>();
+            if (fiProcessTimeMetrics.Exists)
+            {
+                using (StreamReader sr = new StreamReader(fiProcessTimeMetrics.FullName))
+                {
+                    foreach (var line in Lines(sr))
+                    {
+                        var spl = line.Split('|');
+                        processTimeMetrics.Add(spl[0], long.Parse(spl[1]));
+                    }
+                }
+            }
+
             List<List<string>> jobs = new List<List<string>>();
             var filteredWorkItems = workItems.Where(i => i != "");
+            if (fiProcessTimeMetrics.Exists)
+            {
+                // process all documents that take a long time first.
+                filteredWorkItems = filteredWorkItems.OrderByDescending(wi =>
+                {
+                    if (processTimeMetrics.ContainsKey(wi))
+                        return processTimeMetrics[wi];
+                    else
+                        return long.MaxValue;
+                });
+            }
+
             int remainingItems = filteredWorkItems.Count();
             List<string> currentJob = null;
             int itemsInThisJob = 1;
@@ -157,17 +199,19 @@ namespace OxRun
                     currentJob = null;
                 }
             }
+
             //foreach (var j in jobs)
             //{
             //    Console.WriteLine(j.Count());
             //}
             //Console.ReadKey();
+
             return jobs;
         }
 
         private int CalcItemsInCurrentJob(int remainingItems, int totalWorkDaemons, int maxPerJob)
         {
-            int itemsInCurrentJob = (remainingItems / totalWorkDaemons) / 30;
+            int itemsInCurrentJob = (remainingItems / totalWorkDaemons) / 5;
             itemsInCurrentJob = Math.Min(itemsInCurrentJob, maxPerJob);
             itemsInCurrentJob = Math.Max(itemsInCurrentJob, 1);
             return itemsInCurrentJob;

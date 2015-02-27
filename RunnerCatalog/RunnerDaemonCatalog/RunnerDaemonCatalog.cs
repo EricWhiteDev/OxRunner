@@ -25,7 +25,7 @@ namespace OxRun
         static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            ConsolePosition.SetConsolePosition();
+            ConsolePosition.SetConsolePosition(m_RunnerAssemblyVersion.MinorRevision);
 
 #if false
             FileInfo fi = new FileInfo(@"C:\TestFileRepo\xlsx\00\00059253606EA3001619D73993922C2E39D38F.xlsx");
@@ -73,11 +73,14 @@ namespace OxRun
                 {
                     PrintToConsole("Received Do");
                     var repoLocation = new DirectoryInfo((string)doMessage.Xml.Elements("Repo").Attributes("Val").FirstOrDefault());
+                    bool? collectProcessTimeMetrics = (bool?)doMessage.Xml.Elements("CollectProcessTimeMetrics").Attributes("Val").FirstOrDefault();
                     InitRepoIfNecessary(repoLocation);
                     PrintToConsole(string.Format("Repo: {0}", repoLocation.FullName));
 
                     // =>=>=>=>=>=>=>=>=>=>=>=> Send Work Complete =>=>=>=>=>=>=>=>=>=>=>=>
                     PrintToConsole("Sending WorkComplete to RunnerMaster");
+
+                    DateTime prevTime = DateTime.Now;
 
                     var cmsg = new XElement("Message",
                         new XElement("RunnerDaemonMachineName",
@@ -89,12 +92,19 @@ namespace OxRun
                             {
                                 var guidName = d.Attribute("GuidName").Value;
                                 RepoItem ri = m_Repo.GetRepoItemFileInfo(guidName);
-                                PrintToConsole("Processing: " + guidName);
+                                PrintToConsole(guidName);
                                 try
                                 {
                                     var metrics = MetricsGetter.GetMetrics(ri.FiRepoItem.FullName, metricsGetterSettings);
                                     metrics.Name = "Document";
                                     metrics.Add(new XAttribute("GuidName", guidName));
+                                    if (collectProcessTimeMetrics == true)
+                                    {
+                                        DateTime currentTime = DateTime.Now;
+                                        var ticks = (currentTime - prevTime).Ticks;
+                                        metrics.Add(new XAttribute("Ticks", ticks));
+                                        prevTime = currentTime;
+                                    }
                                     return metrics;
                                 }
                                 catch (PowerToolsDocumentException e)
@@ -103,6 +113,13 @@ namespace OxRun
                                         new XAttribute("GuidName", guidName),
                                         new XElement("PowerToolsDocumentException",
                                             MakeValidXml(e.ToString())));
+                                    if (collectProcessTimeMetrics == true)
+                                    {
+                                        DateTime currentTime = DateTime.Now;
+                                        var ticks = (currentTime - prevTime).Ticks;
+                                        errorXml.Add(new XAttribute("Ticks", ticks));
+                                        prevTime = currentTime;
+                                    }
                                     return errorXml;
                                 }
                                 catch (FileFormatException e)
@@ -111,6 +128,13 @@ namespace OxRun
                                         new XAttribute("GuidName", guidName),
                                         new XElement("FileFormatException",
                                             MakeValidXml(e.ToString())));
+                                    if (collectProcessTimeMetrics == true)
+                                    {
+                                        DateTime currentTime = DateTime.Now;
+                                        var ticks = (currentTime - prevTime).Ticks;
+                                        errorXml.Add(new XAttribute("Ticks", ticks));
+                                        prevTime = currentTime;
+                                    }
                                     return errorXml;
                                 }
                                 catch (Exception e)
@@ -119,6 +143,13 @@ namespace OxRun
                                         new XAttribute("GuidName", guidName),
                                         new XElement("Exception",
                                             MakeValidXml(e.ToString())));
+                                    if (collectProcessTimeMetrics == true)
+                                    {
+                                        DateTime currentTime = DateTime.Now;
+                                        var ticks = (currentTime - prevTime).Ticks;
+                                        errorXml.Add(new XAttribute("Ticks", ticks));
+                                        prevTime = currentTime;
+                                    }
                                     return errorXml;
                                 }
                             })));
