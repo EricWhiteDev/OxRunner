@@ -36,8 +36,8 @@ namespace OxRun
         [DllImport("user32.dll", EntryPoint = "SetWindowPos")]
         public static extern IntPtr SetWindowPos(IntPtr hWnd, int hWndInsertAfter, int x, int Y, int cx, int cy, int wFlags);
 
-        private static int m_TopOffsetMaster = 500;
-        private static int m_TopOffsetNonMaster = 300;
+        private static int m_TopOffsetMaster = 600;
+        private static int m_TopOffsetNonMaster = 100;
         private static int m_LeftOffset = 5;
 
         private static int m_Width = 120;
@@ -62,7 +62,7 @@ namespace OxRun
                 cr = new ConsoleRectangle()
                 {
                     Top = m_TopOffsetMaster,
-                    Left = m_LeftOffset + m_Width * 1,
+                    Left = m_LeftOffset + m_Width * positionNumber,
                     Height = m_Height,
                     Width = m_Width,
                 };
@@ -70,7 +70,7 @@ namespace OxRun
                 cr = new ConsoleRectangle()
                 {
                     Top = m_TopOffsetNonMaster,
-                    Left = m_LeftOffset + m_Width * 1,
+                    Left = m_LeftOffset + m_Width * positionNumber,
                     Height = m_Height,
                     Width = m_Width,
                 };
