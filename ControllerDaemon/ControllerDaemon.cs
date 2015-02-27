@@ -15,11 +15,13 @@ namespace OxRun
         static MessageQueue m_ControllerDaemonQueue;
         static XDocument m_XdConfig;
         static XElement m_ThisComputerConfig;
+        static bool? m_WriteLog;
 
         static void Main(string[] args)
         {
             var fiConfig = new FileInfo("../../../ControllerConfig.xml");
             m_XdConfig = XDocument.Load(fiConfig.FullName);
+            m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
 
             ConsolePosition.ResetConsolePositioning();
             ConsolePosition.SetConsolePosition();
@@ -148,8 +150,23 @@ namespace OxRun
                             }
                         }
                     }
+                    else if (doMessage.Xml.Name.LocalName == "DeleteLogs")
+                    {
+                        Console.WriteLine("Received Do {0}", doMessage.Xml.Name.LocalName);
+                        DirectoryInfo oxRunnerDir = new DirectoryInfo(@"../../../");
+                        Console.WriteLine("Deleting logs from {0}", oxRunnerDir.FullName);
+                        DeleteLogsRecursive(oxRunnerDir);
+                    }
                 }
             }
+        }
+
+        private static void DeleteLogsRecursive(DirectoryInfo dir)
+        {
+            foreach (var logFile in dir.GetFiles("*.log"))
+                logFile.Delete();
+            foreach (var subDir in dir.GetDirectories())
+                DeleteLogsRecursive(subDir);
         }
 
         private static void RunOneExe(string masterMachineName, string exe, string args)

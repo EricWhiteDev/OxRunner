@@ -46,7 +46,8 @@ namespace OxRun
 
             // MinorRevision will be unique for each daemon, so we append it for the daemon queue name.
             var runnerDaemon = new RunnerDaemonCatalog(runnerMasterMachineName, m_RunnerAssemblyVersion.MinorRevision);
-            runnerDaemon.PrintToConsole(ConsoleColor.White, string.Format("Log: {0}", runnerDaemon.m_RunnerLog.m_FiLog.FullName));
+            if (runnerDaemon.m_RunnerLog.m_FiLog != null)
+                runnerDaemon.PrintToConsole(ConsoleColor.White, string.Format("Log: {0}", runnerDaemon.m_RunnerLog.m_FiLog.FullName));
             runnerDaemon.PrintToConsole(string.Format("MasterRunner machine name: {0}", runnerMasterMachineName));
             runnerDaemon.PrintToConsole(string.Format("Daemon Number: {0}", m_RunnerAssemblyVersion.MinorRevision));
 

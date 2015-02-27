@@ -12,10 +12,14 @@ namespace OxRun
         public FileInfo m_FiLog;
         public bool m_WriteLog = true;
 
-        public RunnerLog(string prefix)
+        public RunnerLog(string prefix, bool writeLog)
         {
-            m_FiLog = FileUtils.GetDateTimeStampedFileInfo(prefix, ".log");
-            Console.WriteLine("Creating log " + m_FiLog.FullName);
+            m_WriteLog = writeLog;
+            if (m_WriteLog)
+            {
+                m_FiLog = FileUtils.GetDateTimeStampedFileInfo(prefix, ".log");
+                Console.WriteLine("Creating log " + m_FiLog.FullName);
+            }
         }
 
         public void Log(ConsoleColor color, string text)

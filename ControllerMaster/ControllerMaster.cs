@@ -17,13 +17,15 @@ namespace OxRun
         static MessageQueue m_ControllerMasterQueue;
         static MessageQueue m_ControllerMasterStatusQueue;
         static MessageQueue m_ControllerMasterIsAliveQueue;
-        static FileInfo m_FiConfig;
-        static XDocument m_XdConfig;
         static List<string> m_ActiveDaemons;
         static int m_WaitSeconds = 3;
         static List<ConsoleOutputLine> m_ConsoleOutput = new List<ConsoleOutputLine>();
         static FileInfo m_FiLog = null;
+
+        static FileInfo m_FiConfig;
+        static XDocument m_XdConfig;
         static string m_Editor = null;
+        static bool? m_WriteLog = null;
 
         static XElement m_CurrentReport = null;
         static string m_CurrentReportName = null;
@@ -75,6 +77,7 @@ namespace OxRun
             m_FiConfig = new FileInfo("../../../ControllerConfig.xml");
             m_XdConfig = XDocument.Load(m_FiConfig.FullName);
             m_Editor = (string)m_XdConfig.Root.Elements("Editor").Attributes("Val").FirstOrDefault();
+            m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
         }
 
         private static void InitializeLog()
@@ -87,7 +90,8 @@ namespace OxRun
                 now.Hour,
                 now.Minute,
                 now.Second));
-            PrintToConsole(ConsoleColor.White, string.Format("Log: {0}", m_FiLog.FullName));
+            if (m_WriteLog == true)
+                PrintToConsole(ConsoleColor.White, string.Format("Log: {0}", m_FiLog.FullName));
             UpdateConsole();
         }
 
@@ -215,20 +219,23 @@ namespace OxRun
         private static void WriteLog()
         {
             UpdateConsole();
-            var content = m_ConsoleOutput.Select(co => co.Text).ToArray();
-            File.WriteAllLines(m_FiLog.FullName, content);
-            if (m_Editor != null)
+            if (m_WriteLog == true)
             {
-                ProcessStartInfo si = new ProcessStartInfo(m_Editor, m_FiLog.FullName);
-                si.WindowStyle = ProcessWindowStyle.Normal;
-
-                Process process = null;
-                while (true)
+                var content = m_ConsoleOutput.Select(co => co.Text).ToArray();
+                File.WriteAllLines(m_FiLog.FullName, content);
+                if (m_Editor != null)
                 {
-                    process = Process.Start(si);
-                    if (process != null)
-                        break;
-                    System.Threading.Thread.Sleep(100);
+                    ProcessStartInfo si = new ProcessStartInfo(m_Editor, m_FiLog.FullName);
+                    si.WindowStyle = ProcessWindowStyle.Normal;
+
+                    Process process = null;
+                    while (true)
+                    {
+                        process = Process.Start(si);
+                        if (process != null)
+                            break;
+                        System.Threading.Thread.Sleep(100);
+                    }
                 }
             }
         }

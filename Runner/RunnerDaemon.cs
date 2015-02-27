@@ -27,12 +27,27 @@ namespace OxRun
         MessageQueue m_RunnerMasterQueue;
         public RunnerLog m_RunnerLog;
 
+        public FileInfo m_FiConfig;
+        public XDocument m_XdConfig;
+        public string m_Editor = null;
+        public bool? m_WriteLog = null;
+
         public RunnerDaemon(string runnerMasterMachineName, short minorRevisionNumber)
         {
-            m_RunnerLog = new RunnerLog(string.Format("../../../RunnerDaemon-{0:00}", minorRevisionNumber));
-            m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
+            ReadControllerConfig();
+            m_RunnerLog = new RunnerLog(string.Format("../../../RunnerDaemon-{0:00}", minorRevisionNumber), m_WriteLog == true);
+            if (m_WriteLog == true)
+                m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
             m_RunnerMasterMachineName = runnerMasterMachineName;
             InitializeRunnerDaemonQueues(runnerMasterMachineName, minorRevisionNumber);
+        }
+
+        private void ReadControllerConfig()
+        {
+            m_FiConfig = new FileInfo("../../../ControllerConfig.xml");
+            m_XdConfig = XDocument.Load(m_FiConfig.FullName);
+            m_Editor = (string)m_XdConfig.Root.Elements("Editor").Attributes("Val").FirstOrDefault();
+            m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
         }
 
         public void SendDaemonReadyMessage()

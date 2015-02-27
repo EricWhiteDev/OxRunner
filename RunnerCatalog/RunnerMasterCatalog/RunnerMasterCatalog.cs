@@ -18,7 +18,7 @@ namespace OxRun
         static List<List<string>> m_Jobs;
         static int m_NumberOfClientComputers;
 
-        static int? m_LimitFileCount = null;
+        static int? m_LimitFileCount = 100;
 
 
         static void Main(string[] args)

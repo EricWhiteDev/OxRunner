@@ -17,10 +17,18 @@ namespace OxRun
         public RunnerLog m_RunnerLog;
         public string m_MasterMachineName;
 
+        public FileInfo m_FiConfig;
+        public XDocument m_XdConfig;
+        public string m_Editor = null;
+        public bool? m_WriteLog = null;
+
+
         public RunnerMaster()
         {
-            m_RunnerLog = new RunnerLog("../../../RunnerMaster");
-            m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
+            ReadControllerConfig();
+            m_RunnerLog = new RunnerLog("../../../RunnerMaster", m_WriteLog == true);
+            if (m_WriteLog == true)
+                m_RunnerLog.Log(ConsoleColor.White, string.Format("Log: {0}", m_RunnerLog.m_FiLog.FullName));
 
             // ======================= INIT runner master Queue =======================
             // if runner master exists
@@ -62,6 +70,15 @@ namespace OxRun
                 Runner.ClearQueue(m_RunnerMasterIsAliveQueue);
             }
         }
+
+        private void ReadControllerConfig()
+        {
+            m_FiConfig = new FileInfo("../../../ControllerConfig.xml");
+            m_XdConfig = XDocument.Load(m_FiConfig.FullName);
+            m_Editor = (string)m_XdConfig.Root.Elements("Editor").Attributes("Val").FirstOrDefault();
+            m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();
+        }
+
 
         public void MessageLoop(Action<DaemonMessage> processMessage)
         {
