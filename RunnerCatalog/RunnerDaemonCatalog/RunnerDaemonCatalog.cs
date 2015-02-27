@@ -27,7 +27,7 @@ namespace OxRun
             Console.ForegroundColor = ConsoleColor.White;
             ConsolePosition.SetConsolePosition();
 
-#if true
+#if false
             FileInfo fi = new FileInfo(@"C:\TestFileRepo\xlsx\00\00059253606EA3001619D73993922C2E39D38F.xlsx");
             MetricsGetterSettings metricsGetterSettings = new MetricsGetterSettings();
             metricsGetterSettings.IncludeTextInContentControls = false;
@@ -144,7 +144,10 @@ namespace OxRun
         private void InitRepoIfNecessary(DirectoryInfo repoLocation)
         {
             if (repoLocation.FullName != m_RepoLocation)
+            {
                 m_Repo = new Repo(repoLocation);
+                m_RepoLocation = repoLocation.FullName;
+            }
         }
 
         public RunnerDaemonCatalog(string runnerMasterMachineName, short minorRevisionNumber)

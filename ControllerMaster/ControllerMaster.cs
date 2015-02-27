@@ -20,7 +20,7 @@ namespace OxRun
         static FileInfo m_FiConfig;
         static XDocument m_XdConfig;
         static List<string> m_ActiveDaemons;
-        static int m_WaitSeconds = 1;
+        static int m_WaitSeconds = 3;
         static List<ConsoleOutputLine> m_ConsoleOutput = new List<ConsoleOutputLine>();
         static FileInfo m_FiLog = null;
         static string m_Editor = null;
