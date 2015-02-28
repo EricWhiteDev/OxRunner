@@ -74,7 +74,8 @@ namespace OxRun
 
         private void ReadControllerConfig()
         {
-            m_FiConfig = new FileInfo("../../../ControllerConfig.xml");
+            DirectoryInfo diOxRunner = Runner.GetOxRunnerDirectory();
+            m_FiConfig = new FileInfo(Path.Combine(diOxRunner.FullName, "ControllerConfig.xml"));
             m_XdConfig = XDocument.Load(m_FiConfig.FullName);
             m_Editor = (string)m_XdConfig.Root.Elements("Editor").Attributes("Val").FirstOrDefault();
             m_WriteLog = (bool?)m_XdConfig.Root.Elements("WriteLog").Attributes("Val").FirstOrDefault();

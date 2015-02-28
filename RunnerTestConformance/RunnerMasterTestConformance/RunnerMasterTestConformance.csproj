@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F50E353C-D1B8-478B-BBB5-8B94F6B6B654}</ProjectGuid>
+    <ProjectGuid>{3C9AC441-FD1A-4816-9C1A-99F7E9972330}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RunnerDaemonCatalog</RootNamespace>
-    <AssemblyName>RunnerDaemonCatalog</AssemblyName>
+    <RootNamespace>RunnerMasterTestConformance</RootNamespace>
+    <AssemblyName>RunnerMasterTestConformance</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
@@ -32,30 +32,23 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Messaging" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
-    <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RunnerDaemonCatalog.cs" />
+    <Compile Include="RunnerMasterTestConformance.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
-      <Project>{6f957ff3-afcc-4d69-8fbc-71ae21bc45c9}</Project>
-      <Name>OpenXmlPowerTools</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\Runner\Runner.csproj">
+    <ProjectReference Include="..\..\..\..\..\..\Documents\WindowsPowerShell\Modules\OxRunner\Runner\Runner.csproj">
       <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
       <Name>Runner</Name>
     </ProjectReference>

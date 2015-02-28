@@ -23,11 +23,18 @@ namespace OxRun
         public string Monikers; // multiple monikers separated by :
     }
 
+    public class InternalMonikerRepoItem
+    {
+        public string Extension;
+        public string GuidName;
+    }
+
     public class Repo
     {
         public DirectoryInfo m_RepoLocation;
         public FileInfo m_FiMonikerCatalog;
         public Dictionary<string, InternalRepoItem[]> m_repoDictionary = new Dictionary<string, InternalRepoItem[]>();
+        public Dictionary<string, InternalMonikerRepoItem[]> m_monikerDictionary = null;
 
         private static IEnumerable<string> Lines(StreamReader source)
         {
@@ -261,6 +268,46 @@ namespace OxRun
                 })
                 .ToList();
             return retValue;
+        }
+
+        public IEnumerable<string> GetFilesByMoniker(string moniker)
+        {
+            if (m_monikerDictionary == null)
+                InitializeMonikerDictionary();
+            if (m_monikerDictionary.ContainsKey(moniker))
+                return m_monikerDictionary[moniker].Select(kv => kv.GuidName).ToList();
+            else
+                return Enumerable.Empty<string>();
+        }
+
+        private void InitializeMonikerDictionary()
+        {
+            m_monikerDictionary = new Dictionary<string, InternalMonikerRepoItem[]>();
+            foreach (var item in m_repoDictionary)
+            {
+                foreach (var repoItem in item.Value)
+                {
+                    var monikers = repoItem.Monikers.Split(':');
+                    foreach (var moniker in monikers)
+                    {
+                        if (m_monikerDictionary.ContainsKey(moniker))
+                        {
+                            InternalMonikerRepoItem imri = new InternalMonikerRepoItem();
+                            imri.GuidName = item.Key + repoItem.Extension;
+                            imri.Extension = repoItem.Extension;
+                            var newArray = m_monikerDictionary[moniker].Concat(new[] { imri }).ToArray();
+                            m_monikerDictionary[moniker] = newArray;
+                        }
+                        else
+                        {
+                            InternalMonikerRepoItem imri = new InternalMonikerRepoItem();
+                            imri.GuidName = item.Key + repoItem.Extension;
+                            imri.Extension = repoItem.Extension;
+                            m_monikerDictionary.Add(moniker, new[] { imri });
+                        }
+                    }
+                }
+            }
         }
 
         public static string[] WordprocessingExtensions = new[] {

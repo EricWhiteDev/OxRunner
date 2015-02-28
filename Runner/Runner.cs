@@ -89,6 +89,19 @@ namespace OxRun
             queue.Send(message);
             return message.Id;
         }
+
+        public static DirectoryInfo GetOxRunnerDirectory()
+        {
+            DirectoryInfo di = new DirectoryInfo(".");
+            while (true)
+            {
+                if (di.Name == "OxRunner")
+                    return di;
+                if (di.Parent == null)
+                    throw new Exception("????"); // todo fix exception
+                di = di.Parent;
+            }
+        }
     }
 
 }
