@@ -16,7 +16,7 @@
                       ExeName="RunnerMasterCatalog.exe"
                       Args="\\Bigi5-8\c\TestFileRepo"
 					  Skip="null" 
-					  Take="5000" 
+					  Take="null" 
 					  />
         <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
 		<WaitForRunnerMaster />
