@@ -41,7 +41,17 @@ namespace OxRun
             }
         }
 
+        public Repo(DirectoryInfo repoLocation, bool loadMonikers)
+        {
+            LoadRepo(repoLocation, loadMonikers);
+        }
+
         public Repo(DirectoryInfo repoLocation)
+        {
+            LoadRepo(repoLocation, true);
+        }
+
+        private void LoadRepo(DirectoryInfo repoLocation, bool loadMonikers)
         {
             m_RepoLocation = repoLocation;
             FileUtils.ThreadSafeCreateDirectory(m_RepoLocation);
@@ -49,31 +59,34 @@ namespace OxRun
             m_FiMonikerCatalog = new FileInfo(Path.Combine(m_RepoLocation.FullName, "MonikerCatalog.txt"));
             FileUtils.ThreadSafeCreateEmptyTextFileIfNotExist(m_FiMonikerCatalog);
 
-            using (StreamReader sr = new StreamReader(m_FiMonikerCatalog.FullName))
+            if (loadMonikers)
             {
-                foreach (var line in Lines(sr))
+                using (StreamReader sr = new StreamReader(m_FiMonikerCatalog.FullName))
                 {
-                    var spl = line.Split('|');
-                    var repoItem = new InternalRepoItem();
-                    var key = spl[0];
-                    repoItem.Extension = spl[1];
-                    repoItem.Monikers = spl[2];
-                    if (m_repoDictionary.ContainsKey(key))
+                    foreach (var line in Lines(sr))
                     {
-                        var repoDictionaryEntry = m_repoDictionary[key];
-                        var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
-                        if (existingItemWithSameExtension != null)
+                        var spl = line.Split('|');
+                        var repoItem = new InternalRepoItem();
+                        var key = spl[0];
+                        repoItem.Extension = spl[1];
+                        repoItem.Monikers = spl[2];
+                        if (m_repoDictionary.ContainsKey(key))
                         {
-                            existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
+                            var repoDictionaryEntry = m_repoDictionary[key];
+                            var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
+                            if (existingItemWithSameExtension != null)
+                            {
+                                existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
+                            }
+                            else
+                            {
+                                var newInternalRepoItems = repoDictionaryEntry.Concat(new[] { repoItem }).ToArray();
+                                m_repoDictionary[key] = newInternalRepoItems;
+                            }
                         }
                         else
-                        {
-                            var newInternalRepoItems = repoDictionaryEntry.Concat(new[] { repoItem }).ToArray();
-                            m_repoDictionary[key] = newInternalRepoItems;
-                        }
+                            m_repoDictionary.Add(key, new[] { repoItem });
                     }
-                    else
-                        m_repoDictionary.Add(key, new [] {repoItem});
                 }
             }
         }
@@ -176,7 +189,7 @@ namespace OxRun
             if (file.Extension == "")
                 extensionDirName = "no_extension";
             else
-                extensionDirName = file.Extension.TrimStart('.').ToLower() + "/";
+                extensionDirName = file.Extension.TrimStart('.').ToLower();
             var diSubDir = new DirectoryInfo(Path.Combine(m_RepoLocation.FullName, extensionDirName));
             FileUtils.ThreadSafeCreateDirectory(diSubDir);
 
@@ -192,7 +205,7 @@ namespace OxRun
             fiToMakeReadonly.IsReadOnly = true;
 
             if (moniker != null)
-                FileUtils.ThreadSafeAppendAllLines(m_FiMonikerCatalog, new[] { hashString + "|" + extensionDirName + "|" + moniker });
+                FileUtils.ThreadSafeAppendAllLines(m_FiMonikerCatalog, new[] { hashString + "|." + extensionDirName + "|" + moniker });
         }
 
         public void RebuildMonikerFile(FileInfo fiNewMonikerFile)
