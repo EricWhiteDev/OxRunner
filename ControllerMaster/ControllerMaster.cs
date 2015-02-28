@@ -616,6 +616,7 @@ namespace OxRun
                     return false;
                 }
 
+                // ======================= Compile RunnerMaster =======================
                 var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
                 if (results.ExitCode == 0)
                 {
@@ -655,6 +656,7 @@ namespace OxRun
 
                 if (fiExe.Exists)
                 {
+                    // ======================= Run RunnerMaster =======================
                     ProcessStartInfo si = new ProcessStartInfo(fiExe.FullName, args);
                     si.WindowStyle = ProcessWindowStyle.Normal;
                     while (true)
@@ -971,9 +973,9 @@ namespace OxRun
 
         private static void UpdateConsole()
         {
-            // only update every two seconds
+            // only update every second
             var now = DateTime.Now;
-            if ((now - m_LastConsoleUpdate).TotalSeconds < 2)
+            if ((now - m_LastConsoleUpdate).TotalSeconds < 1)
                 return;
             m_LastConsoleUpdate = now;
 

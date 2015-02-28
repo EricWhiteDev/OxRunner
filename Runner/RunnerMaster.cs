@@ -153,32 +153,11 @@ namespace OxRun
         public List<List<string>> DivvyIntoJobs(Repo repo, IEnumerable<string> workItems, int totalWorkDaemons)
         {
             var fiProcessTimeMetrics = new FileInfo(Path.Combine(repo.m_RepoLocation.FullName, "ProcessTimeMetrics.txt"));
-            Dictionary<string, long> processTimeMetrics = new Dictionary<string,long>();
             if (fiProcessTimeMetrics.Exists)
-            {
-                using (StreamReader sr = new StreamReader(fiProcessTimeMetrics.FullName))
-                {
-                    foreach (var line in Lines(sr))
-                    {
-                        var spl = line.Split('|');
-                        processTimeMetrics.Add(spl[0], long.Parse(spl[1]));
-                    }
-                }
-            }
+                return DivvyIntoJobsUsingTimeMetrics(fiProcessTimeMetrics, workItems, totalWorkDaemons);
 
             List<List<string>> jobs = new List<List<string>>();
             var filteredWorkItems = workItems.Where(i => i != "");
-            if (fiProcessTimeMetrics.Exists)
-            {
-                // process all documents that take a long time first.
-                filteredWorkItems = filteredWorkItems.OrderByDescending(wi =>
-                {
-                    if (processTimeMetrics.ContainsKey(wi))
-                        return processTimeMetrics[wi];
-                    else
-                        return long.MaxValue;
-                });
-            }
 
             int remainingItems = filteredWorkItems.Count();
             List<string> currentJob = null;
@@ -200,11 +179,76 @@ namespace OxRun
                 }
             }
 
-            //foreach (var j in jobs)
-            //{
-            //    Console.WriteLine(j.Count());
-            //}
-            //Console.ReadKey();
+            return jobs;
+        }
+
+        private List<List<string>> DivvyIntoJobsUsingTimeMetrics(FileInfo fiProcessTimeMetrics, IEnumerable<string> workItems, int totalWorkDaemons)
+        {
+            Dictionary<string, long> processTimeMetrics = new Dictionary<string, long>();
+
+            using (StreamReader sr = new StreamReader(fiProcessTimeMetrics.FullName))
+            {
+                foreach (var line in Lines(sr))
+                {
+                    var spl = line.Split('|');
+                    processTimeMetrics.Add(spl[0], long.Parse(spl[1]));
+                }
+            }
+
+            List<List<string>> jobs = new List<List<string>>();
+            var filteredWorkItems = workItems.Where(i => i != "");
+
+            // process all documents that take a long time first.
+            var workItemsWithMetrics = filteredWorkItems
+                .Select(wi =>
+                {
+                    long ticks = 0;
+                    if (processTimeMetrics.ContainsKey(wi))
+                        ticks = processTimeMetrics[wi];
+                    else
+                        ticks = 0;
+                    return new
+                    {
+                        Item = wi,
+                        Ticks = ticks,
+                    };
+                })
+                .OrderByDescending(wi => wi.Ticks)
+                .ToList();
+
+            double totalSeconds = (workItemsWithMetrics
+                .Select(wim => wim.Ticks)
+                .Sum()) / (double)TimeSpan.TicksPerSecond;
+
+            // =============================================== change following to increase/decrease items per job
+            double divisor = 8.0;
+
+            double remainingSeconds = totalSeconds;
+            double maxSecondsPerJob = ((double)remainingSeconds / (double)totalWorkDaemons) / divisor;
+            List<string> currentJob = null;
+            double secondsInThisJob = 0.0;
+            int maxItemsPerJob = 300;
+            int itemsInThisJob = 0;
+
+            foreach (var item in workItemsWithMetrics)
+            {
+                if (currentJob == null)
+                    currentJob = new List<string>();
+
+                currentJob.Add(item.Item);
+                ++itemsInThisJob;
+                double seconds = (double)item.Ticks / (double)TimeSpan.TicksPerSecond;
+                secondsInThisJob += seconds;
+                remainingSeconds -= seconds;
+                if (secondsInThisJob > maxSecondsPerJob || itemsInThisJob == maxItemsPerJob)
+                {
+                    jobs.Add(currentJob);
+                    currentJob = null;
+                    secondsInThisJob = 0.0;
+                    itemsInThisJob = 0;
+                    maxSecondsPerJob = ((double)remainingSeconds / (double)totalWorkDaemons) / divisor;
+                }
+            }
 
             return jobs;
         }
