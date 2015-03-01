@@ -14,6 +14,18 @@ namespace OxRun
 {
     class ControllerMaster
     {
+        private static ProcessStartInfo RunRunnerMaster(FileInfo fiExe, string args)
+        {
+            // ================================================================
+            // ================================================================
+            // ======================= Run RunnerMaster =======================
+            // ================================================================
+            // ================================================================
+            // To start the RunnerMaster in debug, set breakpoint here, then run RunnerMaster in VS with specified args.
+            ProcessStartInfo si = new ProcessStartInfo(fiExe.FullName, args);
+            return si;
+        }
+
         static MessageQueue m_ControllerMasterQueue;
         static MessageQueue m_ControllerMasterStatusQueue;
         static MessageQueue m_ControllerMasterIsAliveQueue;
@@ -654,12 +666,7 @@ namespace OxRun
 
                 if (fiExe.Exists)
                 {
-                    // ================================================================
-                    // ================================================================
-                    // ======================= Run RunnerMaster =======================
-                    // ================================================================
-                    // ================================================================
-                    ProcessStartInfo si = new ProcessStartInfo(fiExe.FullName, args);
+                    ProcessStartInfo si = RunRunnerMaster(fiExe, args);
                     si.WindowStyle = ProcessWindowStyle.Normal;
                     while (true)
                     {

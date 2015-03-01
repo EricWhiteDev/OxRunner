@@ -1,4 +1,9 @@
-﻿using System;
+﻿// todo need a more general way to select
+// - specific set of files
+// - not get size 0 files
+// have a funny issue where if there is no extenion, then the extension is set to "." in the RepoItem returned by methods.  Probably in the m_repoDictionary incorrectly.
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -263,6 +268,21 @@ namespace OxRun
                             IsWordprocessingML(z.Extension) ||
                             IsSpreadsheetML(z.Extension) ||
                             IsPresentationML(z.Extension))
+
+
+// todo temp hack to get rid of zero byte files
+                        .Where(z =>
+                        {
+                            var guidName = ri.GuidId + z.Extension;
+                            var tempRepoItem = GetRepoItemFileInfo(guidName);
+                            if (tempRepoItem.FiRepoItem.Length == 0)
+                                return false;
+                            return true;
+                        })
+
+
+
+
                         .Select(z => ri.GuidId + z.Extension);
                     return openXmlItems;
                 })

@@ -50,7 +50,8 @@ namespace OxRun
 
         private void InitializeWork()
         {
-            m_FilesToProcess = m_Repo.GetFilesByMoniker("ConformanceTestDocuments");
+            //m_FilesToProcess = m_Repo.GetFilesByMoniker("ConformanceTestDocuments");
+            m_FilesToProcess = m_Repo.GetAllOpenXmlFiles();
 
             if (m_Skip != null && m_Take == null)
                 m_FilesToProcess = m_FilesToProcess.Skip((int)m_Skip).ToArray();

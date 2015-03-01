@@ -12,6 +12,18 @@ namespace OxRun
 {
     class ControllerDaemon
     {
+        private static ProcessStartInfo RunRunnerDaemon(string exe, string args)
+        {
+            // ======================================================================
+            // ======================================================================
+            // =========================== Running Daemon ===========================
+            // ======================================================================
+            // ======================================================================
+            // To start the RunnerDaemon in debug, set breakpoint here, then run RunnerDaemon in VS with specified args.
+            ProcessStartInfo si = new ProcessStartInfo(exe, args);
+            return si;
+        }
+
         static MessageQueue m_ControllerDaemonQueue;
         static XDocument m_XdConfig;
         static XElement m_ThisComputerConfig;
@@ -170,13 +182,7 @@ namespace OxRun
 
         private static void RunOneExe(string masterMachineName, string exe, string args)
         {
-            // ================================================================================
-            // ================================================================================
-            // =========================== Running Daemon =====================================
-            // ================================================================================
-            // ================================================================================
-
-            ProcessStartInfo si = new ProcessStartInfo(exe, args);
+            ProcessStartInfo si = RunRunnerDaemon(exe, args);
             string windowStyle = (string)m_ThisComputerConfig.Attribute("WindowStyle");
             if (windowStyle == null)
                 windowStyle = "Normal";

@@ -22,7 +22,7 @@ namespace OxRun
         public string m_Editor = null;
         public bool? m_WriteLog = null;
         public bool? m_CollectProcessTimeMetrics = null;
-        public bool m_Verbose = false;
+        public bool m_Verbose = true;
 
         public RunnerMaster()
         {
@@ -207,7 +207,7 @@ namespace OxRun
                     if (processTimeMetrics.ContainsKey(wi))
                         ticks = processTimeMetrics[wi];
                     else
-                        ticks = 0;
+                        ticks = TimeSpan.TicksPerSecond / 2;
                     return new
                     {
                         Item = wi,
@@ -250,6 +250,8 @@ namespace OxRun
                     maxSecondsPerJob = ((double)remainingSeconds / (double)totalWorkDaemons) / divisor;
                 }
             }
+            if (currentJob != null)
+                jobs.Add(currentJob);
 
             return jobs;
         }

@@ -322,7 +322,7 @@ using System.Runtime.InteropServices;
                         ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
                         using (var doc = WordprocessingDocument.Open(ms, false))
                         {
-                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                            return GenerateCompileAndRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
                         }
                     }
                 }
@@ -333,7 +333,7 @@ using System.Runtime.InteropServices;
                         ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
                         using (var doc = SpreadsheetDocument.Open(ms, false))
                         {
-                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                            return GenerateCompileAndRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
                         }
                     }
                 }
@@ -344,7 +344,7 @@ using System.Runtime.InteropServices;
                         ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
                         using (var doc = PresentationDocument.Open(ms, false))
                         {
-                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                            return GenerateCompileAndRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
                         }
                     }
                 }
@@ -367,12 +367,14 @@ using System.Runtime.InteropServices;
             }
         }
 
-        private static XElement GenerateCompileRun(string guidName, OpenXmlPackage doc, string extension, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
+        private static XElement GenerateCompileAndRun(string guidName, OpenXmlPackage doc1, string extension, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
         {
             try
             {
+                ValidationErrors valErrors1 = ValidateAgainstAllVersions(doc1);
+
                 var reflector = new FullCodeReflector();
-                var codeDom = reflector.Reflect(doc);
+                var codeDom = reflector.Reflect(doc1);
 
                 if (codeDom != null)
                 {
@@ -430,21 +432,24 @@ using System.Runtime.InteropServices;
                             {
                                 using (var doc2 = WordprocessingDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
-                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                    ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
+                                    return GetValidationReport(guidName, valErrors1, valErrors2);
                                 }
                             }
                             else if (Repo.IsSpreadsheetML(extension))
                             {
                                 using (var doc2 = SpreadsheetDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
-                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                    ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
+                                    return GetValidationReport(guidName, valErrors1, valErrors2);
                                 }
                             }
                             else if (Repo.IsPresentationML(extension))
                             {
                                 using (var doc2 = PresentationDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
-                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                    ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
+                                    return GetValidationReport(guidName, valErrors1, valErrors2);
                                 }
                             }
                             else
@@ -490,12 +495,75 @@ using System.Runtime.InteropServices;
             }
         }
 
-        private static XElement ValidateAgainstAllFormats(string guidName, OpenXmlPackage oxDoc)
+        private static XElement GetValidationReport(string guidName, ValidationErrors valErrors1, ValidationErrors valErrors2)
+        {
+            XElement v2007 = GetDeltaInOneErrorList(valErrors1.Office2007Errors, valErrors2.Office2007Errors, "Office2007Errors");
+            XElement v2010 = GetDeltaInOneErrorList(valErrors1.Office2010Errors, valErrors2.Office2010Errors, "Office2010Errors");
+            XElement v2013 = GetDeltaInOneErrorList(valErrors1.Office2013Errors, valErrors2.Office2013Errors, "Office2013Errors");
+            bool haveErrors = v2007 != null || v2010 != null || v2013 != null;
+            XAttribute errorAtt = null;
+            XAttribute errorDescription = null;
+            if (haveErrors)
+            {
+                errorAtt = new XAttribute("Error", true);
+                errorDescription = new XAttribute("ErrorDescription", "Difference in validation errors before vs. after (only 1st 3 errors listed)");
+            }
+            var docElement = new XElement("Document",
+                new XAttribute("GuidName", guidName),
+                errorAtt,
+                errorDescription,
+                v2007,
+                v2010,
+                v2013);
+            return docElement;
+        }
+
+        private static XElement GetDeltaInOneErrorList(List<ValidationErrorInfo> errorList1, List<ValidationErrorInfo> errorList2, XName errorElementName)
+        {
+            if (errorList1.Count() != errorList2.Count() ||
+                errorList1.Zip(errorList2, (e1, e2) => new {
+                    Error1 = e1,
+                    Error2 = e2,
+                })
+                .Any(p =>
+                {
+                    if (p.Error1.ToString() == p.Error2.ToString())
+                        return false;
+                    return true;
+                }))
+            {
+                XElement deltaErrors = new XElement(errorElementName,
+                    new XElement("Before",
+                        SerializeErrors(errorList1)),
+                    new XElement("After",
+                        SerializeErrors(errorList2)));
+                return deltaErrors;
+            }
+            return null;
+        }
+
+        private static string SerializeErrors(IEnumerable<ValidationErrorInfo> errorList)
+        {
+            return errorList.Take(3).Select(err =>
+            {
+                StringBuilder sb = new StringBuilder();
+                if (err.Description.Length > 300)
+                    sb.Append(PtUtils.MakeValidXml(err.Description.Substring(0, 300) + " ... elided ...") + Environment.NewLine);
+                else
+                    sb.Append(PtUtils.MakeValidXml(err.Description) + Environment.NewLine);
+                sb.Append("  in part " + PtUtils.MakeValidXml(err.Part.Uri.ToString()) + Environment.NewLine);
+                sb.Append("  at " + PtUtils.MakeValidXml(err.Path.XPath) + Environment.NewLine);
+                return sb.ToString();
+            })
+            .StringConcatenate();
+        }
+
+        private static XElement ValidateAgainstAllFormatsGenerateErrorXml(string guidName, OpenXmlPackage oxDoc)
         {
             List<XElement> errorElements = new List<XElement>();
-            bool pass = ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2007, H.SdkValidationError2007) &&
-                ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2010, H.SdkValidationError2010) &&
-                ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2013, H.SdkValidationError2013);
+            bool pass = ValidateAgainstSpecificVersionGenerateErrorXml(oxDoc, errorElements, FileFormatVersions.Office2007, H.SdkValidationError2007) &&
+                ValidateAgainstSpecificVersionGenerateErrorXml(oxDoc, errorElements, FileFormatVersions.Office2010, H.SdkValidationError2010) &&
+                ValidateAgainstSpecificVersionGenerateErrorXml(oxDoc, errorElements, FileFormatVersions.Office2013, H.SdkValidationError2013);
             if (pass)
             {
                 return new XElement("Document",
@@ -511,7 +579,7 @@ using System.Runtime.InteropServices;
             }
         }
 
-        private static bool ValidateAgainstSpecificVersion(OpenXmlPackage oxDoc, List<XElement> errorElements, DocumentFormat.OpenXml.FileFormatVersions versionToValidateAgainst, XName versionSpecificMetricName)
+        private static bool ValidateAgainstSpecificVersionGenerateErrorXml(OpenXmlPackage oxDoc, List<XElement> errorElements, DocumentFormat.OpenXml.FileFormatVersions versionToValidateAgainst, XName versionSpecificMetricName)
         {
             OpenXmlValidator validator = new OpenXmlValidator(versionToValidateAgainst);
             var errors = validator.Validate(oxDoc);
@@ -534,5 +602,50 @@ using System.Runtime.InteropServices;
             return valid;
         }
 
+        private class ValidationErrors
+        {
+            public List<ValidationErrorInfo> Office2007Errors = new List<ValidationErrorInfo>();
+            public List<ValidationErrorInfo> Office2010Errors = new List<ValidationErrorInfo>();
+            public List<ValidationErrorInfo> Office2013Errors = new List<ValidationErrorInfo>();
+        }
+
+        private static ValidationErrors ValidateAgainstAllVersions(OpenXmlPackage oxDoc)
+        {
+            ValidationErrors validationErrors = new ValidationErrors();
+            OpenXmlValidator validator = new OpenXmlValidator(FileFormatVersions.Office2007);
+            validationErrors.Office2007Errors = validator.Validate(oxDoc).Where(err => UnexpectedError(err)).ToList();
+            validator = new OpenXmlValidator(FileFormatVersions.Office2010);
+            validationErrors.Office2010Errors = validator.Validate(oxDoc).Where(err => UnexpectedError(err)).ToList();
+            validator = new OpenXmlValidator(FileFormatVersions.Office2013);
+            validationErrors.Office2013Errors = validator.Validate(oxDoc).Where(err => UnexpectedError(err)).ToList();
+            return validationErrors;
+        }
+
+        private static string[] ExpectedErrors = new string[] {
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstRow' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:lastRow' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstCol' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:lastCol' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:firstColumn' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:lastColumn' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:noHBand' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:noVBand' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:band1Vert' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:band2Vert' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:band1Horz' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:band2Horz' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:neCell' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:nwCell' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:seCell' attribute is not declared",
+            "The 'http://schemas.openxmlformats.org/wordprocessingml/2006/main:swCell' attribute is not declared",
+        };
+
+        private static bool UnexpectedError(ValidationErrorInfo err)
+        {
+            var errStr = err.Description;
+            if (ExpectedErrors.Any(e => errStr.Contains(e)))
+                return false;
+            return true;
+        }
     }
 }
