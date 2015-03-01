@@ -9,8 +9,8 @@
 )
 
 $sources = @(
-    "$PSScriptRoot\Runner\Repo.cs",
-    "$PSScriptRoot\Runner\FileUtils.cs"
+    "$PSScriptRoot\..\Runner\Repo.cs",
+    "$PSScriptRoot\..\Runner\FileUtils.cs"
 )
 
 Add-Type -ReferencedAssemblies $assemblies -Path $sources

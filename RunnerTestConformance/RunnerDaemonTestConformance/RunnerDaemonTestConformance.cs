@@ -10,8 +10,10 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using OxRun;
 using OpenXmlPowerTools;
+using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
+using DocumentFormat.OpenXml.Tools.DocumentReflector;
 
 namespace OxRun
 {
@@ -21,6 +23,7 @@ namespace OxRun
         static System.Version m_RunnerAssemblyVersion = typeof(RunnerDaemonTestConformance).Assembly.GetName().Version;
         static string m_RepoLocation = null;
         static Repo m_Repo = null;
+        static DirectoryInfo m_DiReflectedCodeProject = null;
 
         static void Main(string[] args)
         {
@@ -51,6 +54,11 @@ namespace OxRun
                 runnerDaemon.PrintToConsole(ConsoleColor.White, string.Format("Log: {0}", runnerDaemon.m_RunnerLog.m_FiLog.FullName));
             runnerDaemon.PrintToConsole(string.Format("MasterRunner machine name: {0}", runnerMasterMachineName));
             runnerDaemon.PrintToConsole(string.Format("Daemon Number: {0}", m_RunnerAssemblyVersion.MinorRevision));
+
+            var homeDrive = Environment.GetEnvironmentVariable("HOMEDRIVE");
+            var homePath = Environment.GetEnvironmentVariable("HOMEPATH");
+            m_DiReflectedCodeProject = OxRun.FileUtils.GetDateTimeStampedDirectoryInfo(homeDrive + homePath + string.Format("/Documents/ReflectedCode-Daemon{0}-", m_RunnerAssemblyVersion.MinorRevision));
+            SetUpReflectedCodeProject(m_DiReflectedCodeProject);
 
             runnerDaemon.SendDaemonReadyMessage();
             runnerDaemon.MessageLoop();
@@ -92,15 +100,16 @@ namespace OxRun
                                 PrintToConsole(guidName);
                                 try
                                 {
-                                    return new XElement("Document",
-                                        new XAttribute("GuidName", guidName));
+                                    var fiGeneratedFile = new FileInfo(Path.Combine(m_DiReflectedCodeProject.FullName, "ReflectedCode.cs"));
+                                    var xml = TestCodeGeneration(m_Repo, guidName, m_DiReflectedCodeProject, fiGeneratedFile);
+                                    return xml;
                                 }
                                 catch (PowerToolsDocumentException e)
                                 {
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("PowerToolsDocumentException",
-                                            MakeValidXml(e.ToString())));
+                                            PtUtils.MakeValidXml(e.ToString())));
                                     if (collectProcessTimeMetrics == true)
                                     {
                                         DateTime currentTime = DateTime.Now;
@@ -115,7 +124,7 @@ namespace OxRun
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("FileFormatException",
-                                            MakeValidXml(e.ToString())));
+                                            PtUtils.MakeValidXml(e.ToString())));
                                     if (collectProcessTimeMetrics == true)
                                     {
                                         DateTime currentTime = DateTime.Now;
@@ -130,7 +139,7 @@ namespace OxRun
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
                                         new XElement("Exception",
-                                            MakeValidXml(e.ToString())));
+                                            PtUtils.MakeValidXml(e.ToString())));
                                     if (collectProcessTimeMetrics == true)
                                     {
                                         DateTime currentTime = DateTime.Now;
@@ -146,21 +155,6 @@ namespace OxRun
             }
         }
 
-        private static string MakeValidXml(string p)
-        {
-            if (!p.Any(c => c < 0x20))
-                return p;
-            var newP = p
-                .Select(c =>
-                {
-                    if (c < 0x20)
-                        return string.Format("_{0:X}_", (int)c);
-                    return c.ToString();
-                })
-                .StringConcatenate();
-            return newP;
-        }
-
         private void InitRepoIfNecessary(DirectoryInfo repoLocation)
         {
             if (repoLocation.FullName != m_RepoLocation)
@@ -172,6 +166,373 @@ namespace OxRun
 
         public RunnerDaemonTestConformance(string runnerMasterMachineName, short minorRevisionNumber)
             : base(runnerMasterMachineName, minorRevisionNumber) { }
+
+        private static void SetUpReflectedCodeProject(DirectoryInfo diReflectedCodeProject)
+        {
+            diReflectedCodeProject.Create();
+            File.WriteAllText(Path.Combine(diReflectedCodeProject.FullName, "ReflectedCodeProject.sln"),
+    @"Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project(""{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}"") = ""ReflectedCodeProject"", ""ReflectedCodeProject.csproj"", ""{A3992583-95B0-4997-8C2F-6469AAE2A689}""
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A3992583-95B0-4997-8C2F-6469AAE2A689}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3992583-95B0-4997-8C2F-6469AAE2A689}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3992583-95B0-4997-8C2F-6469AAE2A689}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3992583-95B0-4997-8C2F-6469AAE2A689}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
+");
+            File.WriteAllText(Path.Combine(diReflectedCodeProject.FullName, "ReflectedCodeProject.csproj"),
+    @"<?xml version=""1.0"" encoding=""utf-8""?>
+<Project ToolsVersion=""12.0"" DefaultTargets=""Build"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
+  <Import Project=""$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props"" Condition=""Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')"" />
+  <PropertyGroup>
+    <Configuration Condition="" '$(Configuration)' == '' "">Debug</Configuration>
+    <Platform Condition="" '$(Platform)' == '' "">AnyCPU</Platform>
+    <ProjectGuid>{A3992583-95B0-4997-8C2F-6469AAE2A689}</ProjectGuid>
+    <OutputType>Exe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>ReflectedCodeProject</RootNamespace>
+    <AssemblyName>ReflectedCodeProject</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+  </PropertyGroup>
+  <PropertyGroup Condition="" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' "">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' "">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include=""DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL"" />
+    <Reference Include=""System"" />
+    <Reference Include=""System.Core"" />
+    <Reference Include=""System.Xml.Linq"" />
+    <Reference Include=""System.Data.DataSetExtensions"" />
+    <Reference Include=""Microsoft.CSharp"" />
+    <Reference Include=""System.Data"" />
+    <Reference Include=""System.Xml"" />
+    <Reference Include=""WindowsBase"" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include=""ReflectedCode.cs"" />
+    <Compile Include=""Properties\AssemblyInfo.cs"" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include=""App.config"" />
+  </ItemGroup>
+  <Import Project=""$(MSBuildToolsPath)\Microsoft.CSharp.targets"" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name=""BeforeBuild"">
+  </Target>
+  <Target Name=""AfterBuild"">
+  </Target>
+  -->
+</Project>
+");
+
+            File.WriteAllText(Path.Combine(diReflectedCodeProject.FullName, "App.config"),
+    @"<?xml version=""1.0"" encoding=""utf-8"" ?>
+<configuration>
+    <startup> 
+        <supportedRuntime version=""v4.0"" sku="".NETFramework,Version=v4.5"" />
+    </startup>
+</configuration>
+");
+
+            var diProperties = new DirectoryInfo(Path.Combine(diReflectedCodeProject.FullName, "Properties"));
+            diProperties.Create();
+
+            File.WriteAllText(Path.Combine(diReflectedCodeProject.FullName, "Properties", "AssemblyInfo.cs"),
+    @"using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
+
+// General Information about an assembly is controlled through the following 
+// set of attributes. Change these attribute values to modify the information
+// associated with an assembly.
+[assembly: AssemblyTitle(""ReflectedCodeProject"")]
+[assembly: AssemblyDescription("""")]
+[assembly: AssemblyConfiguration("""")]
+[assembly: AssemblyCompany("""")]
+[assembly: AssemblyProduct(""ReflectedCodeProject"")]
+[assembly: AssemblyCopyright(""Copyright ©  2015"")]
+[assembly: AssemblyTrademark("""")]
+[assembly: AssemblyCulture("""")]
+
+// Setting ComVisible to false makes the types in this assembly not visible 
+// to COM components.  If you need to access a type in this assembly from 
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(false)]
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid(""1776bdc1-cdfa-4667-a607-04ee9d98b120"")]
+
+// Version information for an assembly consists of the following four values:
+//
+//      Major Version
+//      Minor Version 
+//      Build Number
+//      Revision
+//
+// You can specify all the values or you can default the Build and Revision Numbers 
+// by using the '*' as shown below:
+// [assembly: AssemblyVersion(""1.0.*"")]
+[assembly: AssemblyVersion(""1.0.0.0"")]
+[assembly: AssemblyFileVersion(""1.0.0.0"")]
+");
+
+
+        }
+
+        private static XElement TestCodeGeneration(Repo repo, string guidName, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
+        {
+            try
+            {
+                var repoItem = repo.GetRepoItemByteArray(guidName);
+                if (Repo.IsWordprocessingML(repoItem.Extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
+                        using (var doc = WordprocessingDocument.Open(ms, false))
+                        {
+                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                        }
+                    }
+                }
+                else if (Repo.IsSpreadsheetML(repoItem.Extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
+                        using (var doc = SpreadsheetDocument.Open(ms, false))
+                        {
+                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                        }
+                    }
+                }
+                else if (Repo.IsPresentationML(repoItem.Extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
+                        using (var doc = PresentationDocument.Open(ms, false))
+                        {
+                            return GenerateCompileRun(guidName, doc, repoItem.Extension, diProjectPath, fiGeneratedFile);
+                        }
+                    }
+                }
+                else
+                {
+                    return new XElement("Document",
+                        new XAttribute("GuidName", guidName),
+                        new XAttribute("Error", true),
+                        new XAttribute("ErrorDescription", "IsWordprocessingML, IsPresentationML, and IsSpreadsheetML returned false"),
+                        "Invalid document type");
+                }
+            }
+            catch (Exception e)
+            {
+                return new XElement("Document",
+                    new XAttribute("GuidName", guidName),
+                    new XAttribute("Error", true),
+                    new XAttribute("ErrorDescription", "Exception thrown (1)"),
+                    PtUtils.MakeValidXml(e.ToString()));
+            }
+        }
+
+        private static XElement GenerateCompileRun(string guidName, OpenXmlPackage doc, string extension, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
+        {
+            try
+            {
+                var reflector = new FullCodeReflector();
+                var codeDom = reflector.Reflect(doc);
+
+                if (codeDom != null)
+                {
+                    var code = new CodeDocument(codeDom);
+                    var lines = code.Lines().ToList();
+
+                    var unknownElements = lines.Where(l => l.GetText().Contains("OpenXmlUnknownElement"));
+
+                    var programText = lines.Select(l => l.GetText().TrimStart('\r', '\n')).ToArray();
+                    var lineOfGeneratedProgramClass = programText
+                        .Select((l, i) =>
+                        {
+                            return new
+                            {
+                                Line = l,
+                                Index = i,
+                            };
+                        })
+                        .FirstOrDefault(p => p.Line.Contains("public class GeneratedClass"));
+                    if (lineOfGeneratedProgramClass == null)
+                    {
+                        return new XElement("Document",
+                            new XAttribute("GuidName", guidName),
+                            new XAttribute("Error", true),
+                            new XAttribute("ErrorDescription", "Did not find \"public class GeneratedProgram\""));
+                    }
+
+                    var main =
+    @"public static void Main(string[] args)
+{
+    var p = new GeneratedClass();
+    p.CreatePackage(""../../out" + extension +
+    @""");
+}";
+                    var newProgramText = programText.Take(lineOfGeneratedProgramClass.Index + 2)
+                        .Concat(new[] { main })
+                        .Concat(programText.Skip(lineOfGeneratedProgramClass.Index + 2))
+                        .ToArray();
+                    File.WriteAllLines(fiGeneratedFile.FullName, newProgramText);
+
+                    // compile, check for errors
+                    VSTools.SetUpVSEnvironmentVariables();
+                    var runResults = VSTools.RunMSBuild(diProjectPath);
+
+                    if (runResults.ExitCode == 0)
+                    {
+                        // run, check for errors
+                        var fiBuiltExePath = new FileInfo(Path.Combine(diProjectPath.FullName, "bin", "debug", "ReflectedCodeProject.exe"));
+                        var results = OpenXmlPowerTools.ExecutableRunner.RunExecutable(fiBuiltExePath.FullName, "", fiBuiltExePath.DirectoryName);
+                        if (results.ExitCode == 0)
+                        {
+                            // validate generated file
+                            FileInfo fiGeneratedDocument = new FileInfo(Path.Combine(diProjectPath.FullName, "out" + extension));
+                            if (Repo.IsWordprocessingML(extension))
+                            {
+                                using (var doc2 = WordprocessingDocument.Open(fiGeneratedDocument.FullName, false))
+                                {
+                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                }
+                            }
+                            else if (Repo.IsSpreadsheetML(extension))
+                            {
+                                using (var doc2 = SpreadsheetDocument.Open(fiGeneratedDocument.FullName, false))
+                                {
+                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                }
+                            }
+                            else if (Repo.IsPresentationML(extension))
+                            {
+                                using (var doc2 = PresentationDocument.Open(fiGeneratedDocument.FullName, false))
+                                {
+                                    return ValidateAgainstAllFormats(guidName, doc2);
+                                }
+                            }
+                            else
+                            {
+                                throw new Exception("Internal error"); // todo fix exception
+                            }
+                        }
+                        else
+                        {
+                            var sa = runResults.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).StringConcatenate();
+                            return new XElement("Document",
+                                new XAttribute("GuidName", guidName),
+                                new XAttribute("Error", true),
+                                new XAttribute("ErrorDescription", "Compiled code failed to run"),
+                                PtUtils.MakeValidXml(sa));
+                        }
+                    }
+                    else
+                    {
+                        var sa = runResults.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).StringConcatenate();
+                        return new XElement("Document",
+                            new XAttribute("GuidName", guidName),
+                            new XAttribute("Error", true),
+                            new XAttribute("ErrorDescription", "Generated code failed to compile"),
+                            PtUtils.MakeValidXml(sa));
+                    }
+                }
+                else
+                {
+                    return new XElement("Document",
+                        new XAttribute("GuidName", guidName),
+                        new XAttribute("Error", true),
+                        new XAttribute("ErrorDescription", "Reflector did not instantiate properly"));
+                }
+            }
+            catch (Exception e)
+            {
+                return new XElement("Document",
+                    new XAttribute("GuidName", guidName),
+                    new XAttribute("Error", true),
+                    new XAttribute("ErrorDescription", "Exception thrown when opening document"),
+                    PtUtils.MakeValidXml(e.ToString()));
+            }
+        }
+
+        private static XElement ValidateAgainstAllFormats(string guidName, OpenXmlPackage oxDoc)
+        {
+            List<XElement> errorElements = new List<XElement>();
+            bool pass = ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2007, H.SdkValidationError2007) &&
+                ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2010, H.SdkValidationError2010) &&
+                ValidateAgainstSpecificVersion(oxDoc, errorElements, FileFormatVersions.Office2013, H.SdkValidationError2013);
+            if (pass)
+            {
+                return new XElement("Document",
+                    new XAttribute("GuidName", guidName));
+            }
+            else
+            {
+                return new XElement("Document",
+                    new XAttribute("GuidName", guidName),
+                    new XAttribute("Error", true),
+                    new XAttribute("ErrorDescription", "Generated document failed to validate"),
+                    errorElements);
+            }
+        }
+
+        private static bool ValidateAgainstSpecificVersion(OpenXmlPackage oxDoc, List<XElement> errorElements, DocumentFormat.OpenXml.FileFormatVersions versionToValidateAgainst, XName versionSpecificMetricName)
+        {
+            OpenXmlValidator validator = new OpenXmlValidator(versionToValidateAgainst);
+            var errors = validator.Validate(oxDoc);
+            bool valid = errors.Count() == 0;
+            if (!valid)
+            {
+                errorElements.Add(new XElement(versionSpecificMetricName, new XAttribute(H.Val, true),
+                    errors.Take(3).Select(err =>
+                    {
+                        StringBuilder sb = new StringBuilder();
+                        if (err.Description.Length > 300)
+                            sb.Append(PtUtils.MakeValidXml(err.Description.Substring(0, 300) + " ... elided ...") + Environment.NewLine);
+                        else
+                            sb.Append(PtUtils.MakeValidXml(err.Description) + Environment.NewLine);
+                        sb.Append("  in part " + PtUtils.MakeValidXml(err.Part.Uri.ToString()) + Environment.NewLine);
+                        sb.Append("  at " + PtUtils.MakeValidXml(err.Path.XPath) + Environment.NewLine);
+                        return sb.ToString();
+                    })));
+            }
+            return valid;
+        }
 
     }
 }

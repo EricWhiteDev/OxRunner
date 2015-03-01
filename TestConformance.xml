@@ -2,16 +2,16 @@
 
 	<KillProcesses SearchFor="RunnerDaemonTestConformance*"/>
 		
-    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\WindowsPowerShell\Modules\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\" ExeName="RunnerDaemonTestConformance.exe" />
+    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\" ExeName="RunnerDaemonTestConformance.exe" />
 	
     <If MachineName="win8-1">
-        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\WindowsPowerShell\Modules\OxRunner\RunnerTestConformance\RunnerMasterTestConformance\"
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerMasterTestConformance\"
                       ExeName="RunnerMasterTestConformance.exe"
                       Args="C:\TestFileRepoSmall"
 					  Skip="null" 
 					  Take="null" 
 					  />
-        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\WindowsPowerShell\Modules\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\bin\Debug\RunnerDaemonTestConformance*.exe" />
+        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\bin\Debug\RunnerDaemonTestConformance*.exe" />
 		<WaitForRunnerMaster />
 		<KillProcesses SearchFor="RunnerDaemonTestConformance*"/>
     </If>

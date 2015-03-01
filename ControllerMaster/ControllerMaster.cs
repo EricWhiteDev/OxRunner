@@ -296,7 +296,7 @@ namespace OxRun
                         if (m_UpdatingConsole)
                             System.Threading.Thread.Sleep(200);
                         UpdateMetrics(runnerMetrics, true);
-                        var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../" + m_CurrentReportName, ".xml");
+                        var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../" + m_CurrentReportName, ".log");
                         var elapsedTime = DateTime.Now - runnerMetrics.StartTime;
                         int itemsPerMinute = (int)(runnerMetrics.TotalItems / elapsedTime.TotalMinutes);
                         var sortedReport = new XElement("Report",
@@ -596,8 +596,6 @@ namespace OxRun
 
             if (command.Name.LocalName == "RunnerMaster")
             {
-                var msBuildPath = @"C:\Windows\Microsoft.NET\Framework\v4.0.30319\msbuild.exe";
-
                 var projectPath = new DirectoryInfo((string)command.Attribute("ProjectPath"));
                 var diExeLocation = new DirectoryInfo(Path.Combine(projectPath.FullName, "bin/debug/"));
                 var exeName = (string)command.Attribute("ExeName");
@@ -617,7 +615,7 @@ namespace OxRun
                 }
 
                 // ======================= Compile RunnerMaster =======================
-                var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
+                var results = VSTools.RunMSBuild(projectPath);
                 if (results.ExitCode == 0)
                 {
                     PrintToConsole(ConsoleColor.Gray, string.Format("Build successful for {0}", fiExe.Name));
@@ -840,46 +838,7 @@ namespace OxRun
             PrintToConsole(ConsoleColor.Gray, "VSINSTALLDIR, WindowsSdkDir, WindowsSdkDir_35, WindowsSdkDir_old");
             PrintToConsole(ConsoleColor.Gray, "");
             UpdateConsole();
-
-            SetEnvironmentVariableIfNecessary("DevEnvDir", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\");
-            SetEnvironmentVariableIfNecessary("ExtensionSdkDir", @"C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs");
-            SetEnvironmentVariableIfNecessary("Framework35Version", @"v3.5");
-            SetEnvironmentVariableIfNecessary("FrameworkDir", @"C:\Windows\Microsoft.NET\Framework\");
-            SetEnvironmentVariableIfNecessary("FrameworkDIR32", @"C:\Windows\Microsoft.NET\Framework\");
-            SetEnvironmentVariableIfNecessary("FrameworkVersion", @"v4.0.30319");
-            SetEnvironmentVariableIfNecessary("FrameworkVersion32", @"v4.0.30319");
-            SetEnvironmentVariableIfNecessary("INCLUDE", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\INCLUDE;C:\Program Files (x86)\Windows Kits\8.0\include\shared;C:\Program Files (x86)\Windows Kits\8.0\include\um;C:\Program Files (x86)\Windows Kits\8.0\include\winrt;");
-            SetEnvironmentVariableIfNecessary("LIB", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\LIB;C:\Program Files (x86)\Windows Kits\8.0\lib\win8\um\x86;");
-            SetEnvironmentVariableIfNecessary("LIBPATH", @"C:\Windows\Microsoft.NET\Framework\v4.0.30319;C:\Windows\Microsoft.NET\Framework\v3.5;C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\LIB;C:\Program Files (x86)\Windows Kits\8.0\References\CommonConfiguration\Neutral;C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0\ExtensionSDKs\Microsoft.VCLibs\11.0\References\CommonConfiguration\neutral;");
-            SetEnvironmentVariableIfNecessary("VCINSTALLDIR", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\");
-            SetEnvironmentVariableIfNecessary("VisualStudioVersion", @"11.0");
-            SetEnvironmentVariableIfNecessary("VS110COMNTOOLS", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\Tools\");
-            SetEnvironmentVariableIfNecessary("VS120COMNTOOLS", @"C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Tools\");
-            SetEnvironmentVariableIfNecessary("VSINSTALLDIR", @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\");
-            SetEnvironmentVariableIfNecessary("WindowsSdkDir", @"C:\Program Files (x86)\Windows Kits\8.0\");
-            SetEnvironmentVariableIfNecessary("WindowsSdkDir_35", @"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\");
-            SetEnvironmentVariableIfNecessary("WindowsSdkDir_old", @"C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A\");
-
-            string[] pathsToAdd = new[] {
-                    @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\IDE\",
-                    @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\BIN",
-                    @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\Common7\Tools",
-                    @"C:\Windows\Microsoft.NET\Framework\v4.0.30319",
-                    @"C:\Windows\Microsoft.NET\Framework\v3.5",
-                    @"C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\VCPackages",
-                    @"C:\ProgramFiles (x86)\Windows Kits\8.0\bin\x86",
-                    @"C:\Program Files (x86)\Microsoft SDKs\Windows\v8.0A\bin\NETFX 4.0 Tools",
-                    @"C:\Program Files (x86)\Microsoft SDKs\Windows\v7.0A\Bin\",
-                };
-
-            foreach (var pathToAdd in pathsToAdd)
-            {
-                var existingPath = Environment.GetEnvironmentVariable("Path");
-                if (existingPath.Contains(pathToAdd))
-                    continue;
-                var path = pathToAdd + ";" + existingPath;
-                Environment.SetEnvironmentVariable("Path", path);
-            }
+            VSTools.SetUpVSEnvironmentVariables();
         }
 
         private static void UpdateAssemblyInfoVersion(DirectoryInfo projectPath, int minorVersion)
@@ -890,15 +849,6 @@ namespace OxRun
             Regex regex = new Regex(@"[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+");
             var newAssemblyInfoText = regex.Replace(assemblyInfoText, newVersion);
             File.WriteAllText(fiAssemblyInfo.FullName, newAssemblyInfoText);
-        }
-
-        private static string SetEnvironmentVariableIfNecessary(string environmentVariableName, string value)
-        {
-            string vv;
-            vv = Environment.GetEnvironmentVariable(environmentVariableName);
-            if (vv == null)
-                Environment.SetEnvironmentVariable(environmentVariableName, value);
-            return vv;
         }
 
         private static Command GetCommand()
@@ -977,9 +927,9 @@ namespace OxRun
 
         private static void UpdateConsole()
         {
-            // only update every second
+            // only update every 1/5 second
             var now = DateTime.Now;
-            if ((now - m_LastConsoleUpdate).TotalSeconds < 1)
+            if ((now - m_LastConsoleUpdate).TotalSeconds < .2)
                 return;
             m_LastConsoleUpdate = now;
 

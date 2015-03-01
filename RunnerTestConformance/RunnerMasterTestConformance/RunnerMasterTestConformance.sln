@@ -5,7 +5,7 @@ VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerMasterTestConformance", "RunnerMasterTestConformance.csproj", "{3C9AC441-FD1A-4816-9C1A-99F7E9972330}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "..\..\..\..\..\..\Documents\WindowsPowerShell\Modules\OxRunner\Runner\Runner.csproj", "{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "..\..\Runner\Runner.csproj", "{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

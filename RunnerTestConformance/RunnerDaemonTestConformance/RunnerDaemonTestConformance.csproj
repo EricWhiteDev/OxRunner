@@ -33,6 +33,9 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL" />
+    <Reference Include="OpenXmlSdkTool.DocumentReflector">
+      <HintPath>..\..\..\..\..\..\Program Files (x86)\Open XML SDK\V2.5\tool\OpenXmlSdkTool.DocumentReflector.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Messaging" />
@@ -51,7 +54,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
+    <ProjectReference Include="..\..\..\..\Dropbox\WindowsPowerShell\Modules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
       <Project>{6f957ff3-afcc-4d69-8fbc-71ae21bc45c9}</Project>
       <Name>OpenXmlPowerTools</Name>
     </ProjectReference>

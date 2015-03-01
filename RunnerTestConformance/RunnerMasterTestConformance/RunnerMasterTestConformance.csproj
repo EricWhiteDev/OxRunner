@@ -48,7 +48,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\..\..\Documents\WindowsPowerShell\Modules\OxRunner\Runner\Runner.csproj">
+    <ProjectReference Include="..\..\Runner\Runner.csproj">
       <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
       <Name>Runner</Name>
     </ProjectReference>

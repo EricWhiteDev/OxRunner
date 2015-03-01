@@ -14,26 +14,28 @@ namespace OxRun
         public static DirectoryInfo GetDateTimeStampedDirectoryInfo(string prefix)
         {
             DateTime now = DateTime.Now;
-            var dirName = prefix + string.Format("-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}",
+            var dirName = prefix + string.Format("-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}{6:000}",
                 now.Year - 2000,
                 now.Month,
                 now.Day,
                 now.Hour,
                 now.Minute,
-                now.Second);
+                now.Second,
+                now.Millisecond);
             return new DirectoryInfo(dirName);
         }
 
         public static FileInfo GetDateTimeStampedFileInfo(string prefix, string suffix)
         {
             DateTime now = DateTime.Now;
-            var fileName = prefix + string.Format("-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}",
+            var fileName = prefix + string.Format("-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}{6:000}",
                 now.Year - 2000,
                 now.Month,
                 now.Day,
                 now.Hour,
                 now.Minute,
-                now.Second) + suffix;
+                now.Second,
+                now.Millisecond) + suffix;
             return new FileInfo(fileName);
         }
 
