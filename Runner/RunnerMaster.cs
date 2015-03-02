@@ -153,7 +153,7 @@ namespace OxRun
 
         public List<List<string>> DivvyIntoJobs(Repo repo, IEnumerable<string> workItems, int totalWorkDaemons)
         {
-            var fiProcessTimeMetrics = new FileInfo(Path.Combine(repo.m_RepoLocation.FullName, "ProcessTimeMetrics.txt"));
+            var fiProcessTimeMetrics = new FileInfo(Path.Combine(repo.m_repoLocation.FullName, "ProcessTimeMetrics.txt"));
             if (fiProcessTimeMetrics.Exists)
                 return DivvyIntoJobsUsingTimeMetrics(fiProcessTimeMetrics, workItems, totalWorkDaemons);
 

@@ -382,6 +382,9 @@ using System.Runtime.InteropServices;
                     var lines = code.Lines().ToList();
 
                     var unknownElements = lines.Where(l => l.GetText().Contains("OpenXmlUnknownElement"));
+                    XAttribute unknownElementErrorAttribute = null;
+                    if (unknownElements.Any())
+                        unknownElementErrorAttribute = new XAttribute("OpenXmlUnknownElement", true);
 
                     var programText = lines.Select(l => l.GetText().TrimStart('\r', '\n')).ToArray();
                     var lineOfGeneratedProgramClass = programText
@@ -399,7 +402,8 @@ using System.Runtime.InteropServices;
                         return new XElement("Document",
                             new XAttribute("GuidName", guidName),
                             new XAttribute("Error", true),
-                            new XAttribute("ErrorDescription", "Did not find \"public class GeneratedProgram\""));
+                            new XAttribute("ErrorDescription", "Did not find \"public class GeneratedProgram\""),
+                            unknownElementErrorAttribute);
                     }
 
                     var main =
@@ -433,7 +437,9 @@ using System.Runtime.InteropServices;
                                 using (var doc2 = WordprocessingDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
-                                    return GetValidationReport(guidName, valErrors1, valErrors2);
+                                    var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
+                                    rpt.Add(unknownElementErrorAttribute);
+                                    return rpt;
                                 }
                             }
                             else if (Repo.IsSpreadsheetML(extension))
@@ -441,7 +447,9 @@ using System.Runtime.InteropServices;
                                 using (var doc2 = SpreadsheetDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
-                                    return GetValidationReport(guidName, valErrors1, valErrors2);
+                                    var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
+                                    rpt.Add(unknownElementErrorAttribute);
+                                    return rpt;
                                 }
                             }
                             else if (Repo.IsPresentationML(extension))
@@ -449,7 +457,9 @@ using System.Runtime.InteropServices;
                                 using (var doc2 = PresentationDocument.Open(fiGeneratedDocument.FullName, false))
                                 {
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
-                                    return GetValidationReport(guidName, valErrors1, valErrors2);
+                                    var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
+                                    rpt.Add(unknownElementErrorAttribute);
+                                    return rpt;
                                 }
                             }
                             else
@@ -464,16 +474,34 @@ using System.Runtime.InteropServices;
                                 new XAttribute("GuidName", guidName),
                                 new XAttribute("Error", true),
                                 new XAttribute("ErrorDescription", "Compiled code failed to run"),
+                                unknownElementErrorAttribute,
                                 PtUtils.MakeValidXml(sa));
                         }
                     }
                     else
                     {
                         var sa = runResults.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries).StringConcatenate();
+                        if (sa.Contains("error CS1009: Unrecognized escape sequence"))
+                        {
+                            return new XElement("Document",
+                                new XAttribute("GuidName", guidName),
+                                new XAttribute("Error", true),
+                                new XAttribute("ErrorDescription", "Generated code failed to compile, unrecognized escape sequence"),
+                                unknownElementErrorAttribute);
+                        }
+                        if (sa.Contains("TextAnchoringTypeValues"))
+                        {
+                            return new XElement("Document",
+                                new XAttribute("GuidName", guidName),
+                                new XAttribute("Error", true),
+                                new XAttribute("ErrorDescription", "Generated code failed to compile, the type 'TextAnchoringTypeValues' could not be found"),
+                                unknownElementErrorAttribute);
+                        }
                         return new XElement("Document",
                             new XAttribute("GuidName", guidName),
                             new XAttribute("Error", true),
                             new XAttribute("ErrorDescription", "Generated code failed to compile"),
+                            unknownElementErrorAttribute,
                             PtUtils.MakeValidXml(sa));
                     }
                 }

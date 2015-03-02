@@ -19,9 +19,9 @@
     <If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerMasterTestConformance\"
                       ExeName="RunnerMasterTestConformance.exe"
-                      Args="C:\TestFileRepo"
-					  Skip="50" 
-					  Take="50" 
+                      Args="\\bigi5-8\c\TestFileRepo"
+					  Skip="null" 
+					  Take="2000" 
 					  />
         <Run Exe="\\bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\bin\Debug\RunnerDaemonTestConformance*.exe" />
 		<WaitForRunnerMaster />
