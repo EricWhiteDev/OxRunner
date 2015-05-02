@@ -434,8 +434,9 @@ using System.Runtime.InteropServices;
                             FileInfo fiGeneratedDocument = new FileInfo(Path.Combine(diProjectPath.FullName, "out" + extension));
                             if (Repo.IsWordprocessingML(extension))
                             {
-                                using (var doc2 = WordprocessingDocument.Open(fiGeneratedDocument.FullName, false))
+                                using (var doc2 = WordprocessingDocument.Open(fiGeneratedDocument.FullName, true))
                                 {
+                                    FixUpStartEndAttributes_Hack(doc2);
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
                                     var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
                                     rpt.Add(unknownElementErrorAttribute);
@@ -444,7 +445,7 @@ using System.Runtime.InteropServices;
                             }
                             else if (Repo.IsSpreadsheetML(extension))
                             {
-                                using (var doc2 = SpreadsheetDocument.Open(fiGeneratedDocument.FullName, false))
+                                using (var doc2 = SpreadsheetDocument.Open(fiGeneratedDocument.FullName, true))
                                 {
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
                                     var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
@@ -454,7 +455,7 @@ using System.Runtime.InteropServices;
                             }
                             else if (Repo.IsPresentationML(extension))
                             {
-                                using (var doc2 = PresentationDocument.Open(fiGeneratedDocument.FullName, false))
+                                using (var doc2 = PresentationDocument.Open(fiGeneratedDocument.FullName, true))
                                 {
                                     ValidationErrors valErrors2 = ValidateAgainstAllVersions(doc2);
                                     var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
@@ -521,6 +522,66 @@ using System.Runtime.InteropServices;
                     new XAttribute("ErrorDescription", "Exception thrown when opening document"),
                     PtUtils.MakeValidXml(e.ToString()));
             }
+        }
+
+        private static void FixUpStartEndAttributes_Hack(WordprocessingDocument doc2)
+        {
+            foreach (var part in doc2.ContentParts())
+            {
+                XDocument xd = part.GetXDocument();
+                var newRoot = (XElement)FixUpTransform(xd.Root);
+                xd.Root.ReplaceWith(newRoot);
+                part.PutXDocument();
+            }
+            var styleDefPart = doc2.MainDocumentPart.StyleDefinitionsPart;
+            if (styleDefPart != null)
+            {
+                XDocument xd = styleDefPart.GetXDocument();
+                var newRoot = (XElement)FixUpTransform(xd.Root);
+                xd.Root.ReplaceWith(newRoot);
+                styleDefPart.PutXDocument();
+            }
+            var numDefPart = doc2.MainDocumentPart.NumberingDefinitionsPart;
+            if (numDefPart != null)
+            {
+                XDocument xd = numDefPart.GetXDocument();
+                var newRoot = (XElement)FixUpTransform(xd.Root);
+                xd.Root.ReplaceWith(newRoot);
+                numDefPart.PutXDocument();
+            }
+        }
+
+        private static object FixUpTransform(XNode node)
+        {
+            XElement element = node as XElement;
+            if (element != null)
+            {
+                if (element.Name == W.ind)
+                {
+                    var newAttributes = element
+                        .Attributes()
+                        .Select(a =>
+                        {
+                            if (a.Name == W.start)
+                                return new XAttribute(W.left, a.Value);
+                            if (a.Name == W.startChars)
+                                return new XAttribute(W.leftChars, a.Value);
+                            if (a.Name == W.end)
+                                return new XAttribute(W.right, a.Value);
+                            if (a.Name == W.endChars)
+                                return new XAttribute(W.rightChars, a.Value);
+                            return a;
+                        });
+                    return new XElement(element.Name,
+                        newAttributes,
+                        element.Nodes().Select(n => FixUpTransform(n)));
+                }
+
+                return new XElement(element.Name,
+                    element.Attributes(),
+                    element.Nodes().Select(n => FixUpTransform(n)));
+            }
+            return node;
         }
 
         private static XElement GetValidationReport(string guidName, ValidationErrors valErrors1, ValidationErrors valErrors2)
