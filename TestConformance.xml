@@ -4,6 +4,18 @@
 		
     <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\" ExeName="RunnerDaemonTestConformance.exe" />
 	
+    <If MachineName="pc17">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerMasterTestConformance\"
+                      ExeName="RunnerMasterTestConformance.exe"
+                      Args="C:\TestFileRepoSmall"
+					  Skip="null"
+					  Take="100"
+					  />
+        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerDaemonTestConformance\bin\Debug\RunnerDaemonTestConformance*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonTestConformance*"/>
+    </If>
+
     <If MachineName="win8-1">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerTestConformance\RunnerMasterTestConformance\"
                       ExeName="RunnerMasterTestConformance.exe"
