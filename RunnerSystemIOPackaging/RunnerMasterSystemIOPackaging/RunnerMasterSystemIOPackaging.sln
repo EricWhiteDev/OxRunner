@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 2013
+VisualStudioVersion = 12.0.21005.1
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerMasterSystemIOPackaging", "RunnerMasterSystemIOPackaging.csproj", "{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "..\..\Runner\Runner.csproj", "{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

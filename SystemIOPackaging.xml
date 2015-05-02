@@ -1,0 +1,43 @@
+<Commands>
+
+	<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+		
+    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\" ExeName="RunnerDaemonSystemIOPackaging.exe" />
+	
+    <If MachineName="pc17">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                      ExeName="RunnerMasterSystemIOPackaging.exe"
+                      Args="C:\TestFileRepoSmall"
+					  Skip="null" 
+					  Take="100" 
+					  />
+        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+    </If>
+
+    <If MachineName="win8-1">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                      ExeName="RunnerMasterSystemIOPackaging.exe"
+                      Args="C:\TestFileRepoSmall"
+					  Skip="null" 
+					  Take="null" 
+					  />
+        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+    </If>
+
+    <If MachineName="bigi5-8">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                      ExeName="RunnerMasterSystemIOPackaging.exe"
+                      Args="\\bigi5-8\c\TestFileRepo"
+					  Skip="null" 
+					  Take="2000" 
+					  />
+        <Run Exe="\\bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+    </If>
+
+</Commands>
