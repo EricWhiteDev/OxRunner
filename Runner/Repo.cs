@@ -305,6 +305,50 @@ namespace OxRun
             return retValue;
         }
 
+        public IEnumerable<string> GetWordprocessingMLFiles()
+        {
+            if (m_metricsCatalog == null)
+            {
+                LoadMetricsCatalog();
+            }
+            var retValue = m_repoDictionary
+                .Select(di => new
+                {
+                    GuidId = di.Key,
+                    ItemList = di.Value,
+                })
+                .SelectMany(ri =>
+                {
+                    var openXmlItems = ri.ItemList
+                        .Where(z =>
+                            IsWordprocessingML(z.Extension))
+                        .Where(z =>
+                        {
+                            if (m_metricsCatalog == null)
+                                return true;
+
+                            var guidName = ri.GuidId + z.Extension;
+
+                            if (!m_metricsDictionary.ContainsKey(guidName))
+                                return false;
+
+                            var fileMetrics = m_metricsDictionary[guidName];
+
+                            // todo need to fix this
+                            // todo need an option where RunnerCatalog gets all files not looking at metrics, but others
+                            // can use metrics
+
+                            if (fileMetrics.Element("Exception") != null)
+                                return false;
+                            return true;
+                        })
+                        .Select(z => ri.GuidId + z.Extension);
+                    return openXmlItems;
+                })
+                .ToList();
+            return retValue;
+        }
+
         private void LoadMetricsCatalog()
         {
             var fiMetricsCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, "MetricsCatalog.xml"));
