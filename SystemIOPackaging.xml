@@ -33,7 +33,7 @@
                       ExeName="RunnerMasterSystemIOPackaging.exe"
                       Args="C:\TestFileRepoSmall"
 					  Skip="null" 
-					  Take="null" 
+					  Take="200" 
 					  />
         <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
 		<WaitForRunnerMaster />

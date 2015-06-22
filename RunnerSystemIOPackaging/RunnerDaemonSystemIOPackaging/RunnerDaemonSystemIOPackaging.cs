@@ -23,7 +23,6 @@ namespace OxRun
         static System.Version m_RunnerAssemblyVersion = typeof(RunnerDaemonSystemIOPackaging).Assembly.GetName().Version;
         static string m_RepoLocation = null;
         static Repo m_Repo = null;
-        static DirectoryInfo m_DiReflectedCodeProject = null;
 
         static void Main(string[] args)
         {
@@ -86,7 +85,7 @@ namespace OxRun
                                 PrintToConsole(guidName);
                                 try
                                 {
-                                    var xml = RegenerateUsingSystemIoPackaging(m_Repo, guidName, m_DiReflectedCodeProject);
+                                    var xml = RegenerateUsingSystemIoPackaging(m_Repo, guidName);
                                     return xml;
                                 }
                                 catch (PowerToolsDocumentException e)
@@ -152,12 +151,12 @@ namespace OxRun
         public RunnerDaemonSystemIOPackaging(string runnerMasterMachineName, short minorRevisionNumber)
             : base(runnerMasterMachineName, minorRevisionNumber) { }
 
-        private static XElement RegenerateUsingSystemIoPackaging(Repo repo, string guidName, DirectoryInfo diProjectPath)
+        private static XElement RegenerateUsingSystemIoPackaging(Repo repo, string guidName)
         {
             try
             {
                 var repoItem = repo.GetRepoItemByteArray(guidName);
-                return GenerateNewOpenXmlFile(guidName, repoItem.ByteArray, repoItem.Extension, diProjectPath);
+                return GenerateNewOpenXmlFile(guidName, repoItem.ByteArray, repoItem.Extension);
             }
             catch (Exception e)
             {
@@ -169,7 +168,7 @@ namespace OxRun
             }
         }
 
-        private static XElement GenerateNewOpenXmlFile(string guidName, byte[] byteArray, string extension, DirectoryInfo diProjectPath)
+        private static XElement GenerateNewOpenXmlFile(string guidName, byte[] byteArray, string extension)
         {
             try
             {
