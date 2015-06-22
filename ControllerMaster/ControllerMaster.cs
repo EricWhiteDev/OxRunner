@@ -658,9 +658,15 @@ namespace OxRun
 
                 var take = (string)command.Attribute("Take");
                 if (take == null || take.ToLower() == "null")
-                    args += "null";
+                    args += "null ";
                 else
-                    args = args + take;
+                    args = args + take + " ";
+
+                var specificFile = (string)command.Attribute("SpecificFile");
+                if (specificFile == null || specificFile.ToLower() == "null")
+                    args += "null ";
+                else
+                    args = args + specificFile + " ";
 
                 var workingDir = (string)command.Attribute("WorkingDirectory");
 

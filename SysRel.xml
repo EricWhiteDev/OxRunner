@@ -1,0 +1,19 @@
+<Commands>
+
+	<KillProcesses SearchFor="RunnerDaemonSystemIOPackagingReleased*"/>
+		
+    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackagingReleased\RunnerDaemonSystemIOPackagingReleased\" ExeName="RunnerDaemonSystemIOPackagingReleased.exe" />
+
+  <If MachineName="win8-1">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackagingReleased\RunnerMasterSystemIOPackagingReleased\"
+                      ExeName="RunnerMasterSystemIOPackagingReleased.exe"
+                      Args="\\Bigi5-8\c\TestFileRepo"
+					  Skip="null" 
+					  Take="null"
+					  />
+        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerSystemIOPackagingReleased\RunnerDaemonSystemIOPackagingReleased\bin\Debug\RunnerDaemonSystemIOPackagingReleased*.exe" />
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonSystemIOPackagingReleased*"/>
+    </If>
+
+</Commands>

@@ -31,10 +31,17 @@
   <If MachineName="win8-1">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
                       ExeName="RunnerMasterSystemIOPackaging.exe"
-                      Args="C:\TestFileRepoSmall"
+                      Args="\\Bigi5-8\c\TestFileRepo"
 					  Skip="null" 
-					  Take="200" 
+					  Take="null"
 					  />
+        <!--RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                      ExeName="RunnerMasterSystemIOPackaging.exe"
+                      Args="\\Bigi5-8\c\TestFileRepo"
+					  Skip="null" 
+					  Take="2000"
+					  SpecificFile="0030A269249BAA7C555F531DD5A68B46F9346EFF.docx"
+					  /-->
         <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
 		<WaitForRunnerMaster />
 		<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>

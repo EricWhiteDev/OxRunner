@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{EBEEE761-CCC9-4C3F-B291-8877521DD27D}</ProjectGuid>
+    <ProjectGuid>{4EDE0F37-BCE1-4C09-AB2D-2010E11E796B}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RunnerDaemonSystemIOPackaging</RootNamespace>
-    <AssemblyName>RunnerDaemonSystemIOPackaging</AssemblyName>
+    <RootNamespace>RunnerMasterSystemIOPackaging</RootNamespace>
+    <AssemblyName>RunnerMasterSystemIOPackagingReleased</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -19,7 +19,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug\</OutputPath>
-    <DefineConstants>TRACE;DEBUG</DefineConstants>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -35,7 +35,6 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Messaging" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -43,32 +42,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RunnerDaemonSystemIOPackaging.cs" />
+    <Compile Include="RunnerMasterSystemIOPackaging.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\Open-Xml-Sdk\Open-XML-SDK-SIP.csproj">
-      <Project>{e5d39c6a-9067-477e-b0d3-a9419b86e6e5}</Project>
-      <Name>Open-XML-SDK-SIP</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\System-IO-Packaging\System.IO.Packaging\System.IO.Packaging.csproj">
-      <Project>{a226cf92-ad34-4e4c-8c32-5cfdfacbbda8}</Project>
-      <Name>System.IO.Packaging</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\WindowsPowerShellModules\OxPt\OpenXmlPowerTools\OpenXmlPowerToolsSIP.csproj">
-      <Project>{995e28d8-6efc-4636-9724-0e303b61112d}</Project>
-      <Name>OpenXmlPowerToolsSIP</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Runner\Runner.csproj">
       <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
       <Name>Runner</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SystemIOPackagingTest\SystemIOPackagingTest.csproj">
-      <Project>{98750c92-0541-4df7-bd9a-4f595b13e39a}</Project>
-      <Name>SystemIOPackagingTest</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
