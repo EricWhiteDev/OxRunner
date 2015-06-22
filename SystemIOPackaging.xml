@@ -3,20 +3,32 @@
 	<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
 		
     <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\" ExeName="RunnerDaemonSystemIOPackaging.exe" />
-	
-    <If MachineName="pc17">
-        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
-                      ExeName="RunnerMasterSystemIOPackaging.exe"
-                      Args="C:\TestFileRepoSmall"
-					  Skip="null" 
-					  Take="100" 
-					  />
-        <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
-		<WaitForRunnerMaster />
-		<KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
-    </If>
 
-    <If MachineName="win8-1">
+  <If MachineName="pc17">
+    <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                  ExeName="RunnerMasterSystemIOPackaging.exe"
+                  Args="C:\TestFileRepoSmall"
+                  Skip="null"
+                  Take="100"
+					  />
+    <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
+    <WaitForRunnerMaster />
+    <KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+  </If>
+
+  <If MachineName="xps">
+    <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
+                  ExeName="RunnerMasterSystemIOPackaging.exe"
+                  Args="C:\TestFileRepoSmall"
+                  Skip="null"
+                  Take="100"
+					  />
+    <Run Exe="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerDaemonSystemIOPackaging\bin\Debug\RunnerDaemonSystemIOPackaging*.exe" />
+    <WaitForRunnerMaster />
+    <KillProcesses SearchFor="RunnerDaemonSystemIOPackaging*"/>
+  </If>
+
+  <If MachineName="win8-1">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSystemIOPackaging\RunnerMasterSystemIOPackaging\"
                       ExeName="RunnerMasterSystemIOPackaging.exe"
                       Args="C:\TestFileRepoSmall"
