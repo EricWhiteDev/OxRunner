@@ -1,13 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerDaemonTestConformance", "RunnerDaemonTestConformance.csproj", "{23AEFD85-481E-4BC2-A7D2-F500FD288E3D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "..\..\Runner\Runner.csproj", "{1D65641D-7001-4A2B-8B67-FC0CF6A7C81F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlPowerTools", "..\..\..\..\Dropbox\WindowsPowerShell\Modules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj", "{6F957FF3-AFCC-4D69-8FBC-71AE21BC45C9}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlPowerTools", "..\..\..\WindowsPowerShellModules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj", "{6F957FF3-AFCC-4D69-8FBC-71AE21BC45C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

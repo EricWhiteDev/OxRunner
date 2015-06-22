@@ -9,8 +9,9 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RunnerDaemonTestConformance</RootNamespace>
     <AssemblyName>RunnerDaemonTestConformance</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -54,7 +55,7 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Dropbox\WindowsPowerShell\Modules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
+    <ProjectReference Include="..\..\..\WindowsPowerShellModules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
       <Project>{6f957ff3-afcc-4d69-8fbc-71ae21bc45c9}</Project>
       <Name>OpenXmlPowerTools</Name>
     </ProjectReference>

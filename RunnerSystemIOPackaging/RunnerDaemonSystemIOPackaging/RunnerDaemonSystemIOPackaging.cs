@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.IO.Packaging;
 using System.Linq;
 using System.Messaging;
 using System.Text;
@@ -44,7 +45,6 @@ namespace OxRun
 
             var homeDrive = Environment.GetEnvironmentVariable("HOMEDRIVE");
             var homePath = Environment.GetEnvironmentVariable("HOMEPATH");
-            m_DiReflectedCodeProject = OxRun.FileUtils.GetDateTimeStampedDirectoryInfo(homeDrive + homePath + string.Format("/Documents/ReflectedCode-Daemon{0}-", m_RunnerAssemblyVersion.MinorRevision));
 
             runnerDaemon.SendDaemonReadyMessage();
             runnerDaemon.MessageLoop();
@@ -86,8 +86,7 @@ namespace OxRun
                                 PrintToConsole(guidName);
                                 try
                                 {
-                                    var fiGeneratedFile = new FileInfo(Path.Combine(m_DiReflectedCodeProject.FullName, "ReflectedCode.cs"));
-                                    var xml = TestCodeGeneration(m_Repo, guidName, m_DiReflectedCodeProject, fiGeneratedFile);
+                                    var xml = RegenerateUsingSystemIoPackaging(m_Repo, guidName, m_DiReflectedCodeProject);
                                     return xml;
                                 }
                                 catch (PowerToolsDocumentException e)
@@ -153,46 +152,12 @@ namespace OxRun
         public RunnerDaemonSystemIOPackaging(string runnerMasterMachineName, short minorRevisionNumber)
             : base(runnerMasterMachineName, minorRevisionNumber) { }
 
-        private static XElement TestCodeGeneration(Repo repo, string guidName, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
+        private static XElement RegenerateUsingSystemIoPackaging(Repo repo, string guidName, DirectoryInfo diProjectPath)
         {
             try
             {
                 var repoItem = repo.GetRepoItemByteArray(guidName);
-
-                if (Repo.IsWordprocessingML(repoItem.Extension))
-                {
-                    return GenerateNewDocumentUsingDocumentBuilder(guidName, repoItem.ByteArray, repoItem.Extension, diProjectPath, fiGeneratedFile);
-                }
-                //else if (Repo.IsSpreadsheetML(repoItem.Extension))
-                //{
-                //    using (MemoryStream ms = new MemoryStream())
-                //    {
-                //        ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
-                //        using (var doc = SpreadsheetDocument.Open(ms, false))
-                //        {
-                //            // todo ew do something with these
-                //        }
-                //    }
-                //}
-                //else if (Repo.IsPresentationML(repoItem.Extension))
-                //{
-                //    using (MemoryStream ms = new MemoryStream())
-                //    {
-                //        ms.Write(repoItem.ByteArray, 0, repoItem.ByteArray.Length);
-                //        using (var doc = PresentationDocument.Open(ms, false))
-                //        {
-                //            // todo ew do something with these
-                //        }
-                //    }
-                //}
-                else
-                {
-                    return new XElement("Document",
-                        new XAttribute("GuidName", guidName),
-                        new XAttribute("Error", true),
-                        new XAttribute("ErrorDescription", "IsWordprocessingML, IsPresentationML, and IsSpreadsheetML returned false"),
-                        "Invalid document type");
-                }
+                return GenerateNewOpenXmlFile(guidName, repoItem.ByteArray, repoItem.Extension, diProjectPath);
             }
             catch (Exception e)
             {
@@ -204,38 +169,90 @@ namespace OxRun
             }
         }
 
-        private static XElement GenerateNewDocumentUsingDocumentBuilder(string guidName, byte[] byteArray, string extension, DirectoryInfo diProjectPath, FileInfo fiGeneratedFile)
+        private static XElement GenerateNewOpenXmlFile(string guidName, byte[] byteArray, string extension, DirectoryInfo diProjectPath)
         {
             try
             {
                 ValidationErrors valErrors1 = null;
+                ValidationErrors valErrors2 = null;
 
-                using (MemoryStream ms = new MemoryStream())
+                if (Util.IsWordprocessingML(extension))
                 {
-                    ms.Write(byteArray, 0, byteArray.Length);
-                    using (WordprocessingDocument wDoc = WordprocessingDocument.Open(ms, true))
+                    using (MemoryStream ms = new MemoryStream())
                     {
-                        valErrors1 = ValidateAgainstAllVersions(wDoc);
+                        ms.Write(byteArray, 0, byteArray.Length);
+                        using (WordprocessingDocument wDoc = WordprocessingDocument.Open(ms, true))
+                        {
+                            valErrors1 = ValidateAgainstAllVersions(wDoc);
+                        }
                     }
                 }
-
-                WmlDocument s1 = new WmlDocument("source.docx", byteArray);
-                var sources = new List<Source>()
+                else if (Util.IsSpreadsheetML(extension))
                 {
-                    new Source(new WmlDocument(s1)),
-                };
-                WmlDocument rebuilt = DocumentBuilder.BuildDocument(sources);
-
-                using (MemoryStream ms = new MemoryStream())
-                {
-                    ms.Write(rebuilt.DocumentByteArray, 0, rebuilt.DocumentByteArray.Length);
-                    using (WordprocessingDocument wDoc = WordprocessingDocument.Open(ms, true))
+                    using (MemoryStream ms = new MemoryStream())
                     {
-                        ValidationErrors valErrors2 = ValidateAgainstAllVersions(wDoc);
-                        var rpt = GetValidationReport(guidName, valErrors1, valErrors2);
-                        return rpt;
+                        ms.Write(byteArray, 0, byteArray.Length);
+                        using (SpreadsheetDocument sDoc = SpreadsheetDocument.Open(ms, true))
+                        {
+                            valErrors1 = ValidateAgainstAllVersions(sDoc);
+                        }
                     }
                 }
+                else if (Util.IsPresentationML(extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(byteArray, 0, byteArray.Length);
+                        using (PresentationDocument pDoc = PresentationDocument.Open(ms, true))
+                        {
+                            valErrors1 = ValidateAgainstAllVersions(pDoc);
+                        }
+                    }
+                }
+                else
+                {
+                    return new XElement("Document",
+                        new XAttribute("GuidName", guidName),
+                        new XAttribute("Error", true),
+                        new XAttribute("ErrorDescription", "Not one of the three Open XML document types."));
+                }
+
+                byte[] newByteArray = ClonePackage(byteArray);
+
+                if (Util.IsWordprocessingML(extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(newByteArray, 0, newByteArray.Length);
+                        using (WordprocessingDocument wDoc = WordprocessingDocument.Open(ms, true))
+                        {
+                            valErrors2 = ValidateAgainstAllVersions(wDoc);
+                        }
+                    }
+                }
+                else if (Util.IsSpreadsheetML(extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(newByteArray, 0, newByteArray.Length);
+                        using (SpreadsheetDocument sDoc = SpreadsheetDocument.Open(ms, true))
+                        {
+                            valErrors2 = ValidateAgainstAllVersions(sDoc);
+                        }
+                    }
+                }
+                else if (Util.IsPresentationML(extension))
+                {
+                    using (MemoryStream ms = new MemoryStream())
+                    {
+                        ms.Write(newByteArray, 0, newByteArray.Length);
+                        using (PresentationDocument pDoc = PresentationDocument.Open(ms, true))
+                        {
+                            valErrors2 = ValidateAgainstAllVersions(pDoc);
+                        }
+                    }
+                }
+                return GetValidationReport(guidName, valErrors1, valErrors2);
             }
             catch (Exception e)
             {
@@ -245,6 +262,45 @@ namespace OxRun
                     new XAttribute("ErrorDescription", "Exception thrown when opening document"),
                     PtUtils.MakeValidXml(e.ToString()));
             }
+        }
+
+        static byte[] ClonePackage(byte[] fromByteArray)
+        {
+            using (MemoryStream ms = new MemoryStream())
+            {
+                ms.Write(fromByteArray, 0, fromByteArray.Length);
+                using (Package pkg = Package.Open(ms, FileMode.Open, FileAccess.Read))
+                using (MemoryStream newMs = new MemoryStream())
+                {
+                    using (Package newPkg = Package.Open(newMs, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        foreach (var part in pkg.GetParts())
+                        {
+                            if (part.ContentType != "application/vnd.openxmlformats-package.relationships+xml")
+                            {
+                                var newPart = newPkg.CreatePart(part.Uri, part.ContentType, CompressionOption.Normal);
+                                using (var oldStream = part.GetStream())
+                                using (var newStream = newPart.GetStream())
+                                    CopyStream(oldStream, newStream);
+                                foreach (var rel in part.GetRelationships())
+                                    newPart.CreateRelationship(rel.TargetUri, rel.TargetMode, rel.RelationshipType, rel.Id);
+                            }
+                        }
+                        foreach (var rel in pkg.GetRelationships())
+                            newPkg.CreateRelationship(rel.TargetUri, rel.TargetMode, rel.RelationshipType, rel.Id);
+                    }
+                    return newMs.ToArray();
+                }
+            }
+        }
+
+        private static void CopyStream(Stream source, Stream target)
+        {
+            const int BufSize = 0x4096;
+            byte[] buf = new byte[BufSize];
+            int bytesRead = 0;
+            while ((bytesRead = source.Read(buf, 0, BufSize)) > 0)
+                target.Write(buf, 0, bytesRead);
         }
 
         private static XElement GetValidationReport(string guidName, ValidationErrors valErrors1, ValidationErrors valErrors2)

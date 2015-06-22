@@ -50,13 +50,17 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\..\Dropbox\WindowsPowerShell\Modules\OxPt\OpenXmlPowerTools\OpenXmlPowerToolsSIP.csproj">
+    <ProjectReference Include="..\..\..\Open-Xml-Sdk\Open-XML-SDK-SIP.csproj">
+      <Project>{e5d39c6a-9067-477e-b0d3-a9419b86e6e5}</Project>
+      <Name>Open-XML-SDK-SIP</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\System-IO-Packaging\System.IO.Packaging\System.IO.Packaging.csproj">
+      <Project>{a226cf92-ad34-4e4c-8c32-5cfdfacbbda8}</Project>
+      <Name>System.IO.Packaging</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\WindowsPowerShellModules\OxPt\OpenXmlPowerTools\OpenXmlPowerToolsSIP.csproj">
       <Project>{995e28d8-6efc-4636-9724-0e303b61112d}</Project>
       <Name>OpenXmlPowerToolsSIP</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\..\..\Open-Xml-Sdk\Open-XML-SDK.csproj">
-      <Project>{55fb0a8a-b816-4dc9-9bb4-4db5b5950f5a}</Project>
-      <Name>Open-XML-SDK</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Runner\Runner.csproj">
       <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
