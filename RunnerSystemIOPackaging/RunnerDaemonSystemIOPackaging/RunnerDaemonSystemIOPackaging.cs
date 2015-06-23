@@ -79,6 +79,13 @@ namespace OxRun
                             {
                                 var guidName = d.Attribute("GuidName").Value;
                                 RepoItem ri = m_Repo.GetRepoItemFileInfo(guidName);
+                                if (!ri.FiRepoItem.Exists)
+                                {
+                                    var errorXml = new XElement("Document",
+                                        new XAttribute("GuidName", guidName),
+                                        new XAttribute("Error", "File does not exist in Repo"));
+                                    return errorXml;
+                                }
                                 PrintToConsole(guidName);
                                 return SystemIOPackagingTest.DoTest(m_Repo, guidName);
                             })));
