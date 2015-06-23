@@ -40,7 +40,7 @@ namespace OxRun
                 m_SpecificFile = args[4];
             m_Repo = new Repo(m_DiRepo);
             var runnerMaster = new RunnerMasterSystemIOPackaging();
-            runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterSystemIOPackaging");
+            runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterSystemIOPackagingReleased");
             runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Number of client computers: {0}", m_NumberOfClientComputers));
             runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Doc repo location: {0}", m_DiRepo.FullName));
             runnerMaster.InitializeWork();
@@ -130,7 +130,7 @@ namespace OxRun
                 PrintToConsole(string.Format("Sending Report Start"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SystemIOPackaging")),
+                    new XAttribute("Val", "SystemIOPackagingReleased")),
                 new XElement("TotalItemsToProcess",
                     new XAttribute("Val", totalItemsToProcess)));
 
@@ -144,7 +144,7 @@ namespace OxRun
                 PrintToConsole(string.Format("Sending Report"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SystemIOPackaging")),
+                    new XAttribute("Val", "SystemIOPackagingReleased")),
                 new XElement("RunnerDaemonMachineName",
                     new XAttribute("Val", runnerDaemonMachineName)),
                 new XElement("ItemsProcessed",
@@ -161,7 +161,7 @@ namespace OxRun
                 PrintToConsole(string.Format("Sending Report Complete"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SystemIOPackaging")));
+                    new XAttribute("Val", "SystemIOPackagingReleased")));
 
             Runner.SendMessage("ReportComplete", cmsg, m_MasterMachineName, OxRunConstants.ControllerMasterStatusQueueName);
         }
