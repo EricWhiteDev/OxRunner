@@ -5,9 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using OxRun;
+using OxRunner;
 
-namespace OxRun
+namespace OxRunner
 {
     class RunnerMasterCatalog : RunnerMaster
     {

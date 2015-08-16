@@ -9,11 +9,11 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using DocumentFormat.OpenXml.Packaging;
 using OpenXmlPowerTools;
-using OxRun;
+using OxRunner;
 using DocumentFormat.OpenXml.Validation;
 using System.Globalization;
 
-namespace OxRun
+namespace OxRunner
 {
     class RunnerDaemonCatalog : RunnerDaemon
     {

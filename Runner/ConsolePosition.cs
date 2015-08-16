@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Runtime.InteropServices;
 
 
-namespace OxRun
+namespace OxRunner
 {
     public class ConsoleRectangle
     {

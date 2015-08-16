@@ -8,14 +8,14 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Xml.Linq;
-using OxRun;
+using OxRunner;
 using OpenXmlPowerTools;
 using DocumentFormat.OpenXml;
 using DocumentFormat.OpenXml.Packaging;
 using DocumentFormat.OpenXml.Validation;
 using DocumentFormat.OpenXml.Tools.DocumentReflector;
 
-namespace OxRun
+namespace OxRunner
 {
     class RunnerDaemonTestConformance : RunnerDaemon
     {
@@ -57,7 +57,7 @@ namespace OxRun
 
             var homeDrive = Environment.GetEnvironmentVariable("HOMEDRIVE");
             var homePath = Environment.GetEnvironmentVariable("HOMEPATH");
-            m_DiReflectedCodeProject = OxRun.FileUtils.GetDateTimeStampedDirectoryInfo(homeDrive + homePath + string.Format("/Documents/ReflectedCode-Daemon{0}-", m_RunnerAssemblyVersion.MinorRevision));
+            m_DiReflectedCodeProject = OxRunner.FileUtils.GetDateTimeStampedDirectoryInfo(homeDrive + homePath + string.Format("/Documents/ReflectedCode-Daemon{0}-", m_RunnerAssemblyVersion.MinorRevision));
             SetUpReflectedCodeProject(m_DiReflectedCodeProject);
 
             runnerDaemon.SendDaemonReadyMessage();

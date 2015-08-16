@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Xml.Linq;
 
-namespace OxRun
+namespace OxRunner
 {
     public class RepoItem
     {
