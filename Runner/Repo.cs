@@ -155,10 +155,28 @@ namespace OxRunner
             return repoItem;
         }
 
+        public void Store(FileInfo file, string[] monikers)
+        {
+            if (monikers.Length == 0)
+                throw new Exception("No monikers");
+            foreach (var item in monikers)
+            {
+                if (item.Contains('|'))
+                    throw new Exception("Moniker contains pipe symbol");
+            }
+            var sbMoniker = new StringBuilder();
+            foreach (var item in monikers)
+            {
+                sbMoniker.Append(item + "|");
+            }
+            var moniker = sbMoniker.ToString().TrimEnd('|');
+            Store(file, moniker);
+        }
+
         public void Store(FileInfo file, string moniker)
         {
-            // Sometimes the file may just have been written, and the OS is asynchronously finishing the copy.
-            // If the copy is not finished, then get UnauthorizedAccessException, so wait a bit, try again.
+            // Sometimes the file may just have been written, and dropbox may be accessing.
+            // If dropbox is accessing, then get UnauthorizedAccessException, so wait a bit, try again.
             while (true)
             {
                 try
