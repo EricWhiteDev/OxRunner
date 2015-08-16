@@ -9,7 +9,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RunnerDaemonSystemIOPackaging</RootNamespace>
     <AssemblyName>RunnerDaemonSystemIOPackagingReleased</AssemblyName>
-    <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
   </PropertyGroup>
@@ -52,15 +52,15 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\..\WindowsPowerShellModules\OxPt\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
-      <Project>{6f957ff3-afcc-4d69-8fbc-71ae21bc45c9}</Project>
-      <Name>OpenXmlPowerTools</Name>
+    <ProjectReference Include="..\..\OpenXmlPowerTools.WB\OpenXmlPowerTools.WB.csproj">
+      <Project>{7280f60c-fabb-45c8-bb44-13ae8810cbac}</Project>
+      <Name>OpenXmlPowerTools.WB</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Runner\Runner.csproj">
       <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
       <Name>Runner</Name>
     </ProjectReference>
-    <ProjectReference Include="..\SystemIOPackagingTest\SystemIOPackagingTest.csproj">
+    <ProjectReference Include="..\..\RunnerSystemIOPackaging\SystemIOPackagingTest\SystemIOPackagingTest.csproj">
       <Project>{98750c92-0541-4df7-bd9a-4f595b13e39a}</Project>
       <Name>SystemIOPackagingTest</Name>
     </ProjectReference>

@@ -23,7 +23,7 @@ namespace OxRun
 
         static void Main(string[] args)
         {
-            ConsolePosition.SetConsolePosition();
+            //ConsolePosition.SetConsolePosition();
             if (args.Length != 3)
             {
                 throw new ArgumentException("Arguments to RunnerMaster are incorrect.  Should be 1) number of client computers, 2) test file storage root location, 3) test file storage file list");
@@ -63,7 +63,7 @@ namespace OxRun
 
             PrintToConsole(ConsoleColor.White, "InitializeWork after adding to files to process zzz");
 
-            m_Jobs = DivvyIntoJobs(m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
+            m_Jobs = DivvyIntoJobs(null, m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
 
             PrintToConsole(ConsoleColor.White, "InitializeWork after divvy into jobs zzz");
 

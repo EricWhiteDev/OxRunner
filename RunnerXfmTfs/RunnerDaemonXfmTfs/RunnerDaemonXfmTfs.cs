@@ -20,7 +20,6 @@ namespace OxRun
         static void Main(string[] args)
         {
             Console.ForegroundColor = ConsoleColor.White;
-            ConsolePosition.SetConsolePosition();
 
             if (args.Length == 0)
                 throw new ArgumentException("ControllerDaemon did not pass any arguments to RunnerDaemon");
