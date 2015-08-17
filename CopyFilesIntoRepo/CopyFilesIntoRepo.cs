@@ -17,7 +17,7 @@ namespace CopyFilesIntoRepo
             DirectoryInfo dirToCopy = new DirectoryInfo(@"E:\Sync\300-HtmlConverterTestDocuments\QualityBar");
 
             DirectoryInfo ri = new DirectoryInfo(@"c:\TestFileRepo");
-            Repo r = new Repo(ri, true);
+            Repo r = new Repo(ri);
 
             AddFilesToRepo(r, dirToCopy);
         }

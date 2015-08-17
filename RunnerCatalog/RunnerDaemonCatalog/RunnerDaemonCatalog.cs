@@ -92,7 +92,7 @@ namespace OxRunner
                             doMessage.Xml.Element("Documents").Elements("Document").Select(d =>
                             {
                                 var guidName = d.Attribute("GuidName").Value;
-                                RepoItem ri = m_Repo.GetRepoItemFileInfo(guidName);
+                                RepoItem ri = m_Repo.GetRepoItem(guidName);
                                 PrintToConsole(guidName);
                                 try
                                 {

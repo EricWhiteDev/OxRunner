@@ -3,8 +3,7 @@
 // - not get size 0 files
 // have a funny issue where if there is no extenion, then the extension is set to "." in the RepoItem returned by methods.  Probably in the m_repoDictionary incorrectly.
 
-// todo need an option where RunnerCatalog gets all files not looking at metrics, but others
-// can use metrics
+// todo need an option where RunnerCatalog gets all files not looking at metrics, but others can use metrics
 
 using System;
 using System.Collections.Generic;
@@ -23,53 +22,45 @@ namespace OxRunner
         public string Extension;
         public string Monikers;
         public FileInfo FiRepoItem;
-        public byte[] ByteArray;
+
+        private byte[] m_ByteArray;
+        public byte[] ByteArray
+        {
+            get {
+                if (m_ByteArray == null)
+                    m_ByteArray = File.ReadAllBytes(FiRepoItem.FullName);
+                return m_ByteArray;
+            }
+        }
     }
 
-    public class InternalRepoItem
+    #region PrivateClasses
+    class InternalRepoItem
     {
         public string Extension;
-        public string Monikers; // multiple monikers separated by :
+        public string Monikers; // multiple monikers separated by |
     }
 
-    public class InternalMonikerRepoItem
+    class InternalMonikerRepoItem
     {
         public string Extension;
         public string GuidName;
     }
+    #endregion
 
     public class Repo
     {
         public DirectoryInfo m_repoLocation;
         public FileInfo m_fiMonikerCatalog;
-        public Dictionary<string, InternalRepoItem[]> m_repoDictionary = new Dictionary<string, InternalRepoItem[]>();
-        public Dictionary<string, InternalMonikerRepoItem[]> m_monikerDictionary = null;
         public XElement m_metricsCatalog = null;
         public Dictionary<string, XElement> m_metricsDictionary = null;
 
-        private static IEnumerable<string> Lines(StreamReader source)
-        {
-            String line;
-
-            if (source == null)
-                throw new ArgumentNullException("source");
-            while ((line = source.ReadLine()) != null)
-            {
-                yield return line;
-            }
-        }
-
-        public Repo(DirectoryInfo repoLocation, bool loadMonikers)
-        {
-            LoadRepo(repoLocation, loadMonikers);
-        }
-
         public Repo(DirectoryInfo repoLocation)
         {
-            LoadRepo(repoLocation, true);
+            LoadRepo(repoLocation);
         }
 
-        private void LoadRepo(DirectoryInfo repoLocation, bool loadMonikers)
+        private void LoadRepo(DirectoryInfo repoLocation)
         {
             m_repoLocation = repoLocation;
             FileUtils.ThreadSafeCreateDirectory(m_repoLocation);
@@ -77,66 +68,40 @@ namespace OxRunner
             m_fiMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, "MonikerCatalog.txt"));
             FileUtils.ThreadSafeCreateEmptyTextFileIfNotExist(m_fiMonikerCatalog);
 
-            if (loadMonikers)
+            using (StreamReader sr = new StreamReader(m_fiMonikerCatalog.FullName))
             {
-                using (StreamReader sr = new StreamReader(m_fiMonikerCatalog.FullName))
+                foreach (var line in Lines(sr))
                 {
-                    foreach (var line in Lines(sr))
+                    var spl = line.Split('|');
+                    var repoItem = new InternalRepoItem();
+                    var key = spl[0];
+                    repoItem.Extension = spl[1];
+                    repoItem.Monikers = spl[2];
+                    if (m_repoDictionary.ContainsKey(key))
                     {
-                        var spl = line.Split('|');
-                        var repoItem = new InternalRepoItem();
-                        var key = spl[0];
-                        repoItem.Extension = spl[1];
-                        repoItem.Monikers = spl[2];
-                        if (m_repoDictionary.ContainsKey(key))
+                        var repoDictionaryEntry = m_repoDictionary[key];
+                        var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
+                        if (existingItemWithSameExtension != null)
                         {
-                            var repoDictionaryEntry = m_repoDictionary[key];
-                            var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
-                            if (existingItemWithSameExtension != null)
-                            {
-                                existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
-                            }
-                            else
-                            {
-                                var newInternalRepoItems = repoDictionaryEntry.Concat(new[] { repoItem }).ToArray();
-                                m_repoDictionary[key] = newInternalRepoItems;
-                            }
+                            existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
                         }
                         else
-                            m_repoDictionary.Add(key, new[] { repoItem });
+                        {
+                            var newInternalRepoItems = repoDictionaryEntry.Concat(new[] { repoItem }).ToArray();
+                            m_repoDictionary[key] = newInternalRepoItems;
+                        }
                     }
+                    else
+                        m_repoDictionary.Add(key, new[] { repoItem });
                 }
             }
         }
 
         public RepoItem GetRepoItem(string guidName)
         {
-            var spl = guidName.Split('.');
-            var guid = spl[0];
-            var extension = "." + spl[1];
             try
             {
-                var internalRepoItems = m_repoDictionary[guid];
-                var internalRepoItem = internalRepoItems.FirstOrDefault(ri => ri.Extension == extension);
-                if (internalRepoItem == null)
-                    return null;
-                RepoItem repoItem = new RepoItem();
-                repoItem.GuidName = guid;
-                repoItem.Extension = internalRepoItem.Extension;
-                repoItem.Monikers = internalRepoItem.Monikers;
-                return repoItem;
-            }
-            catch (KeyNotFoundException)
-            {
-                return null;
-            }
-        }
-
-        public RepoItem GetRepoItemFileInfo(string guidName)
-        {
-            try
-            {
-                RepoItem repoItem = GetRepoItem(guidName);
+                RepoItem repoItem = GetRepoItemInternal(guidName);
                 var hashSubDir = guidName.Substring(0, 2) + "/";
                 var filename = guidName.Substring(2);
                 repoItem.FiRepoItem = new FileInfo(Path.Combine(m_repoLocation.FullName, repoItem.Extension.TrimStart('.'), hashSubDir, filename));
@@ -146,13 +111,6 @@ namespace OxRunner
             {
                 return null;
             }
-        }
-
-        public RepoItem GetRepoItemByteArray(string guidName)
-        {
-            RepoItem repoItem = GetRepoItemFileInfo(guidName);
-            repoItem.ByteArray = File.ReadAllBytes(repoItem.FiRepoItem.FullName);
-            return repoItem;
         }
 
         public void Store(FileInfo file, string[] monikers)
@@ -244,6 +202,7 @@ namespace OxRunner
                 FileUtils.ThreadSafeAppendAllLines(m_fiMonikerCatalog, new[] { hashString + "|." + extensionDirName + "|" + moniker });
         }
 
+#if false
         public void RebuildMonikerFile(FileInfo fiNewMonikerFile)
         {
             List<string> monikerContent = new List<string>();
@@ -276,6 +235,9 @@ namespace OxRunner
                 }
             }
         }
+#endif
+
+        #region AccessMethods
 
         public IEnumerable<string> GetAllOpenXmlFiles()
         {
@@ -487,7 +449,7 @@ namespace OxRunner
             {
                 foreach (var repoItem in item.Value)
                 {
-                    var monikers = repoItem.Monikers.Split(':');
+                    var monikers = repoItem.Monikers.Split('|');
                     foreach (var moniker in monikers)
                     {
                         if (m_monikerDictionary.ContainsKey(moniker))
@@ -509,6 +471,8 @@ namespace OxRunner
                 }
             }
         }
+
+        #endregion
 
         public static string[] WordprocessingExtensions = new[] {
             ".docx",
@@ -549,5 +513,59 @@ namespace OxRunner
         {
             return PresentationExtensions.Contains(ext.ToLower());
         }
+
+        #region InternalCatalogs
+
+        // Following dictionary gets all information for a given GUID
+        // key is the guid
+        // contains multiple InternalRepoItem objects, one for each extension
+        private Dictionary<string, InternalRepoItem[]> m_repoDictionary = new Dictionary<string, InternalRepoItem[]>();
+
+        // Following dictionary contains all repo items for a given moniker
+        // key is the moniker
+        // contains multiple extension / guidName items
+        private Dictionary<string, InternalMonikerRepoItem[]> m_monikerDictionary = null;
+
+        #endregion
+
+        #region PrivateMethods
+
+        private static IEnumerable<string> Lines(StreamReader source)
+        {
+            String line;
+
+            if (source == null)
+                throw new ArgumentNullException("source");
+            while ((line = source.ReadLine()) != null)
+            {
+                yield return line;
+            }
+        }
+
+        private RepoItem GetRepoItemInternal(string guidName)
+        {
+            var spl = guidName.Split('.');
+            var guid = spl[0];
+            var extension = "." + spl[1];
+            try
+            {
+                var internalRepoItems = m_repoDictionary[guid];
+                var internalRepoItem = internalRepoItems.FirstOrDefault(ri => ri.Extension == extension);
+                if (internalRepoItem == null)
+                    return null;
+                RepoItem repoItem = new RepoItem();
+                repoItem.GuidName = guid;
+                repoItem.Extension = internalRepoItem.Extension;
+                repoItem.Monikers = internalRepoItem.Monikers;
+                return repoItem;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
+
+        #endregion
+
     }
 }

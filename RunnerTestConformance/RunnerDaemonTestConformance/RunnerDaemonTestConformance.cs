@@ -96,7 +96,7 @@ namespace OxRunner
                             doMessage.Xml.Element("Documents").Elements("Document").Select(d =>
                             {
                                 var guidName = d.Attribute("GuidName").Value;
-                                RepoItem ri = m_Repo.GetRepoItemFileInfo(guidName);
+                                RepoItem ri = m_Repo.GetRepoItem(guidName);
                                 PrintToConsole(guidName);
                                 try
                                 {
@@ -314,7 +314,7 @@ using System.Runtime.InteropServices;
         {
             try
             {
-                var repoItem = repo.GetRepoItemByteArray(guidName);
+                var repoItem = repo.GetRepoItem(guidName);
                 if (Repo.IsWordprocessingML(repoItem.Extension))
                 {
                     using (MemoryStream ms = new MemoryStream())

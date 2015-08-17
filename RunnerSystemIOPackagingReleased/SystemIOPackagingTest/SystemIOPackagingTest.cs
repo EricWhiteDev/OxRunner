@@ -62,7 +62,7 @@ namespace OxRunner
         {
             try
             {
-                var repoItem = repo.GetRepoItemByteArray(guidName);
+                var repoItem = repo.GetRepoItem(guidName);
                 return GenerateNewOpenXmlFile(guidName, repoItem.ByteArray, repoItem.Extension);
             }
             catch (Exception e)
