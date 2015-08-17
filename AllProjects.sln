@@ -39,6 +39,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlPowerTools.WB", "Ope
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CopyFilesIntoRepo", "CopyFilesIntoRepo\CopyFilesIntoRepo.csproj", "{8E425F66-343E-4FC3-A67A-1E939625111E}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerTests", "RunnerTests\RunnerTests.csproj", "{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -117,6 +119,10 @@ Global
 		{8E425F66-343E-4FC3-A67A-1E939625111E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8E425F66-343E-4FC3-A67A-1E939625111E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8E425F66-343E-4FC3-A67A-1E939625111E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

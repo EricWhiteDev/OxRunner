@@ -172,7 +172,7 @@ namespace OxRunner
                         File.SetAttributes(fiTemp.FullName, attributes);
 
                         PrintToConsole("Calling repo.Store: " + fiTemp.FullName); 
-                        repo.Store(fiTemp, hydratedMoniker);
+                        repo.Store(fiTemp, new [] { hydratedMoniker });
 
                         while (true)
                         {

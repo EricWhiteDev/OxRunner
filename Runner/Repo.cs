@@ -20,7 +20,7 @@ namespace OxRunner
     {
         public string GuidName;
         public string Extension;
-        public string Monikers;
+        public string[] Monikers;
         public FileInfo FiRepoItem;
 
         private byte[] m_ByteArray;
@@ -34,20 +34,6 @@ namespace OxRunner
         }
     }
 
-    #region PrivateClasses
-    class InternalRepoItem
-    {
-        public string Extension;
-        public string Monikers; // multiple monikers separated by |
-    }
-
-    class InternalMonikerRepoItem
-    {
-        public string Extension;
-        public string GuidName;
-    }
-    #endregion
-
     public class Repo
     {
         public DirectoryInfo m_repoLocation;
@@ -55,8 +41,24 @@ namespace OxRunner
         public XElement m_metricsCatalog = null;
         public Dictionary<string, XElement> m_metricsDictionary = null;
 
+        private bool m_ReadWrite;
+        public bool ReadWrite
+        {
+            get
+            {
+                return m_ReadWrite;
+            }
+        }
+
         public Repo(DirectoryInfo repoLocation)
         {
+            m_ReadWrite = false;
+            LoadRepo(repoLocation);
+        }
+
+        public Repo(DirectoryInfo repoLocation, bool readWrite)
+        {
+            m_ReadWrite = readWrite;
             LoadRepo(repoLocation);
         }
 
@@ -65,7 +67,13 @@ namespace OxRunner
             m_repoLocation = repoLocation;
             FileUtils.ThreadSafeCreateDirectory(m_repoLocation);
 
-            m_fiMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, "MonikerCatalog.txt"));
+            m_fiMonikerCatalog = m_repoLocation.GetFiles("MonikerCatalog*").OrderBy(t => t.Name).LastOrDefault();
+            if (m_fiMonikerCatalog == null)
+            {
+                DateTime n = DateTime.Now;
+                var monikerName = string.Format("MonikerCatalog-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}-{6:000}.txt", n.Year - 2000, n.Month, n.Date, n.Hour, n.Minute, n.Second, n.Millisecond);
+                m_fiMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, monikerName));
+            }
             FileUtils.ThreadSafeCreateEmptyTextFileIfNotExist(m_fiMonikerCatalog);
 
             using (StreamReader sr = new StreamReader(m_fiMonikerCatalog.FullName))
@@ -76,14 +84,16 @@ namespace OxRunner
                     var repoItem = new InternalRepoItem();
                     var key = spl[0];
                     repoItem.Extension = spl[1];
-                    repoItem.Monikers = spl[2];
+                    repoItem.Monikers = spl[2].Split(':');
                     if (m_repoDictionary.ContainsKey(key))
                     {
                         var repoDictionaryEntry = m_repoDictionary[key];
                         var existingItemWithSameExtension = repoDictionaryEntry.FirstOrDefault(q => q.Extension == repoItem.Extension);
                         if (existingItemWithSameExtension != null)
                         {
-                            existingItemWithSameExtension.Monikers = existingItemWithSameExtension.Monikers + ":" + repoItem.Monikers;
+                            // following should never get executed.
+                            var newMonikers = existingItemWithSameExtension.Monikers.Concat(repoItem.Monikers).OrderBy(m => m).Distinct().ToArray();
+                            existingItemWithSameExtension.Monikers = newMonikers;
                         }
                         else
                         {
@@ -97,50 +107,36 @@ namespace OxRunner
             }
         }
 
-        public RepoItem GetRepoItem(string guidName)
+        public bool Store(FileInfo file, string[] monikers)
         {
-            try
-            {
-                RepoItem repoItem = GetRepoItemInternal(guidName);
-                var hashSubDir = guidName.Substring(0, 2) + "/";
-                var filename = guidName.Substring(2);
-                repoItem.FiRepoItem = new FileInfo(Path.Combine(m_repoLocation.FullName, repoItem.Extension.TrimStart('.'), hashSubDir, filename));
-                return repoItem;
-            }
-            catch (KeyNotFoundException)
-            {
-                return null;
-            }
-        }
+            if (m_ReadWrite == false)
+                throw new Exception("Repo is opened for readonly access");
 
-        public void Store(FileInfo file, string[] monikers)
-        {
-            if (monikers.Length == 0)
-                throw new Exception("No monikers");
             foreach (var item in monikers)
             {
+                if (item.Contains(':'))
+                {
+                    Console.WriteLine("Moniker {0} contains colon", item);
+                    return false;
+                }
                 if (item.Contains('|'))
-                    throw new Exception("Moniker contains pipe symbol");
+                {
+                    Console.WriteLine("Moniker {0} contains pipe symbol", item);
+                    return false;
+                }
             }
-            var sbMoniker = new StringBuilder();
-            foreach (var item in monikers)
-            {
-                sbMoniker.Append(item + "|");
-            }
-            var moniker = sbMoniker.ToString().TrimEnd('|');
-            Store(file, moniker);
-        }
 
-        public void Store(FileInfo file, string moniker)
-        {
             // Sometimes the file may just have been written, and dropbox may be accessing.
             // If dropbox is accessing, then get UnauthorizedAccessException, so wait a bit, try again.
             while (true)
             {
                 try
                 {
-                if (!file.Exists)
-                    throw new ArgumentException(string.Format("File {0} does not exist", file.FullName));
+                    if (!file.Exists)
+                    {
+                        Console.WriteLine("File {0} does not exist", file.FullName);
+                        return false;
+                    }
                 }
                 catch (System.UnauthorizedAccessException)
                 {
@@ -184,6 +180,55 @@ namespace OxRunner
                 extensionDirName = "no_extension";
             else
                 extensionDirName = file.Extension.TrimStart('.').ToLower();
+
+            // if this hash already exists in the dictionary, then only need to update data structures.
+            if (m_repoDictionary.ContainsKey(hashString))
+            {
+                var hashItem = m_repoDictionary[hashString];
+                var forThisExtension = hashItem.FirstOrDefault(gi => gi.Extension == extensionDirName);
+                // if the file with this hash exists in the dictionary, but does not exist for this extension, then add it
+                if (forThisExtension == null)
+                {
+                    CopyFileIntoRepo(file, hashString, extensionDirName);
+                    InternalRepoItem iri = new InternalRepoItem()
+                    {
+                        Extension = extensionDirName,
+                        Monikers = monikers,
+                    };
+                    var newGuidItemList = hashItem.Concat(new[] { iri }).ToArray();
+                    m_repoDictionary[hashString] = newGuidItemList;
+                    return true;
+                }
+                else
+                {
+                    // the file with this hash and this extension exists in the dictionary.  Need to update monikers.
+                    var newMonikerList = forThisExtension.Monikers.Concat(monikers).Distinct().OrderBy(t => t).ToArray();
+                    forThisExtension.Monikers = newMonikerList;
+                    return true;
+                }
+            }
+
+            CopyFileIntoRepo(file, hashString, extensionDirName);
+
+            InternalRepoItem iri2 = new InternalRepoItem()
+            {
+                Extension = extensionDirName,
+                Monikers = monikers,
+            };
+            m_repoDictionary.Add(hashString, new[] { iri2 });
+
+            if (monikers != null)
+            {
+                // append to the end of the moniker catalog anyway, even though it will be all be written out by CloseAndSaveMonikerFile
+                // gives a chance to recover if the process adding files to the repo crashes in the middle.
+                var monikerString = monikers.Select(m => m + ":").StrCat().TrimEnd(':');
+                FileUtils.ThreadSafeAppendAllLines(m_fiMonikerCatalog, new[] { hashString + "|." + extensionDirName + "|" + monikerString });
+            }
+            return true;
+        }
+
+        private void CopyFileIntoRepo(FileInfo file, string hashString, string extensionDirName)
+        {
             var diSubDir = new DirectoryInfo(Path.Combine(m_repoLocation.FullName, extensionDirName));
             FileUtils.ThreadSafeCreateDirectory(diSubDir);
 
@@ -197,47 +242,52 @@ namespace OxRunner
 
             FileInfo fiToMakeReadonly = new FileInfo(fiFileName.FullName);
             fiToMakeReadonly.IsReadOnly = true;
-
-            if (moniker != null)
-                FileUtils.ThreadSafeAppendAllLines(m_fiMonikerCatalog, new[] { hashString + "|." + extensionDirName + "|" + moniker });
         }
 
-#if false
-        public void RebuildMonikerFile(FileInfo fiNewMonikerFile)
+        public FileInfo CloseAndSaveMonikerFile()
         {
-            List<string> monikerContent = new List<string>();
-            GetFileList(m_repoLocation, monikerContent);
-            File.WriteAllLines(fiNewMonikerFile.FullName, monikerContent.ToArray());
-        }
+            if (!m_ReadWrite)
+                throw new Exception("Repo is opened in ReadOnly mode");
 
-        private void GetFileList(DirectoryInfo di, List<string> fileList)
-        {
-            // iterate through extension directories
-            foreach (var extensionDir in di.GetDirectories())
+            DateTime n = DateTime.Now;
+            var monikerName = string.Format("MonikerCatalog-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}-{6:000}.txt", n.Year - 2000, n.Month, n.Date, n.Hour, n.Minute, n.Second, n.Millisecond);
+            m_fiMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, monikerName));
+            if (m_fiMonikerCatalog.Exists)
+                m_fiMonikerCatalog.Delete();
+            using (StreamWriter sw = new StreamWriter(m_fiMonikerCatalog.FullName))
             {
-                // iterate through 2 char sha1 dirs
-                foreach (var sha1Dir in extensionDir.GetDirectories())
+                foreach (var item in m_repoDictionary)
                 {
-                    // iterate through files in each extension dir
-                    foreach (var sha1File in sha1Dir.GetFiles())
-                    {
-                        var nameWithoutExtension = sha1File.Name.Substring(0, sha1File.Name.Length - sha1File.Extension.Length);
-                        var sha1 = sha1Dir.Name + nameWithoutExtension;
-                        if (m_repoDictionary.ContainsKey(sha1))
-                        {
-                            var listRepoItems = m_repoDictionary[sha1];
-                            var repoItem = listRepoItems.FirstOrDefault(ri => ri.Extension.ToLower() == sha1File.Extension.ToLower());
-                            if (repoItem == null)
-                                throw new Exception("What????");
-                            fileList.Add(string.Format("{0}|{1}|{2}", sha1, sha1File.Extension.ToLower(), repoItem.Monikers));
-                        }
-                    }
+                    foreach (var item2 in item.Value)
+	                {
+                        string monikers = item2.Monikers.Select(m => m + ":").StrCat().TrimEnd(':');
+                        string line = string.Format("{0}|{1}|{2}", item.Key, item2.Extension, monikers) + Environment.NewLine;
+                        sw.Write(line);
+	                }
                 }
             }
+            return m_fiMonikerCatalog;
         }
-#endif
 
         #region AccessMethods
+
+        // The methods here do not impact the repo in any way.
+
+        public RepoItem GetRepoItem(string guidName)
+        {
+            try
+            {
+                RepoItem repoItem = GetRepoItemInternal(guidName);
+                var hashSubDir = guidName.Substring(0, 2) + "/";
+                var filename = guidName.Substring(2);
+                repoItem.FiRepoItem = new FileInfo(Path.Combine(m_repoLocation.FullName, repoItem.Extension.TrimStart('.'), hashSubDir, filename));
+                return repoItem;
+            }
+            catch (KeyNotFoundException)
+            {
+                return null;
+            }
+        }
 
         public IEnumerable<string> GetAllOpenXmlFiles()
         {
@@ -285,95 +335,29 @@ namespace OxRunner
             return retValue;
         }
 
+        enum OpenXmlFileType
+        {
+            WordprocessingML,
+            SpreadsheetML,
+            PresentationML,
+        }
+
         public IEnumerable<string> GetWordprocessingMLFiles()
         {
-            if (m_metricsCatalog == null)
-            {
-                LoadMetricsCatalog();
-            }
-            var retValue = m_repoDictionary
-                .Select(di => new
-                {
-                    GuidId = di.Key,
-                    ItemList = di.Value,
-                })
-                .SelectMany(ri =>
-                {
-                    var openXmlItems = ri.ItemList
-                        .Where(z =>
-                            IsWordprocessingML(z.Extension))
-                        .Where(z =>
-                        {
-                            if (m_metricsCatalog == null)
-                                return true;
-
-                            var guidName = ri.GuidId + z.Extension;
-
-                            if (!m_metricsDictionary.ContainsKey(guidName))
-                                return false;
-
-                            var fileMetrics = m_metricsDictionary[guidName];
-
-                            // todo need to fix this
-                            // todo need an option where RunnerCatalog gets all files not looking at metrics, but others
-                            // can use metrics
-
-                            if (fileMetrics.Element("Exception") != null)
-                                return false;
-                            return true;
-                        })
-                        .Select(z => ri.GuidId + z.Extension);
-                    return openXmlItems;
-                })
-                .ToList();
-            return retValue;
+            return GetFilesOfType(OpenXmlFileType.WordprocessingML);
         }
 
         public IEnumerable<string> GetSpreadsheetMLFiles()
         {
-            if (m_metricsCatalog == null)
-            {
-                LoadMetricsCatalog();
-            }
-            var retValue = m_repoDictionary
-                .Select(di => new
-                {
-                    GuidId = di.Key,
-                    ItemList = di.Value,
-                })
-                .SelectMany(ri =>
-                {
-                    var openXmlItems = ri.ItemList
-                        .Where(z =>
-                            IsSpreadsheetML(z.Extension))
-                        .Where(z =>
-                        {
-                            if (m_metricsCatalog == null)
-                                return true;
-
-                            var guidName = ri.GuidId + z.Extension;
-
-                            if (!m_metricsDictionary.ContainsKey(guidName))
-                                return false;
-
-                            var fileMetrics = m_metricsDictionary[guidName];
-
-                            // todo need to fix this
-                            // todo need an option where RunnerCatalog gets all files not looking at metrics, but others
-                            // can use metrics
-
-                            if (fileMetrics.Element("Exception") != null)
-                                return false;
-                            return true;
-                        })
-                        .Select(z => ri.GuidId + z.Extension);
-                    return openXmlItems;
-                })
-                .ToList();
-            return retValue;
+            return GetFilesOfType(OpenXmlFileType.SpreadsheetML);
         }
 
         public IEnumerable<string> GetPresentationMLFiles()
+        {
+            return GetFilesOfType(OpenXmlFileType.PresentationML);
+        }
+
+        private IEnumerable<string> GetFilesOfType(OpenXmlFileType fileType)
         {
             if (m_metricsCatalog == null)
             {
@@ -389,7 +373,15 @@ namespace OxRunner
                 {
                     var openXmlItems = ri.ItemList
                         .Where(z =>
-                            IsPresentationML(z.Extension))
+                        {
+                            if (fileType == OpenXmlFileType.WordprocessingML)
+                                return IsWordprocessingML("." + z.Extension);
+                            if (fileType == OpenXmlFileType.SpreadsheetML)
+                                return IsSpreadsheetML("." + z.Extension);
+                            if (fileType == OpenXmlFileType.PresentationML)
+                                return IsPresentationML("." + z.Extension);
+                            throw new Exception("Internal error");
+                        })
                         .Where(z =>
                         {
                             if (m_metricsCatalog == null)
@@ -410,7 +402,8 @@ namespace OxRunner
                                 return false;
                             return true;
                         })
-                        .Select(z => ri.GuidId + z.Extension);
+                        .Select(z => ri.GuidId + "." + z.Extension)
+                        .ToList();
                     return openXmlItems;
                 })
                 .ToList();
@@ -449,7 +442,7 @@ namespace OxRunner
             {
                 foreach (var repoItem in item.Value)
                 {
-                    var monikers = repoItem.Monikers.Split('|');
+                    var monikers = repoItem.Monikers;
                     foreach (var moniker in monikers)
                     {
                         if (m_monikerDictionary.ContainsKey(moniker))
@@ -546,7 +539,7 @@ namespace OxRunner
         {
             var spl = guidName.Split('.');
             var guid = spl[0];
-            var extension = "." + spl[1];
+            var extension = spl[1];
             try
             {
                 var internalRepoItems = m_repoDictionary[guid];
@@ -568,4 +561,30 @@ namespace OxRunner
         #endregion
 
     }
+
+    #region PrivateClasses
+    class InternalRepoItem
+    {
+        public string Extension;
+        public string[] Monikers; // multiple monikers
+    }
+
+    class InternalMonikerRepoItem
+    {
+        public string Extension;
+        public string GuidName;
+    }
+    #endregion
+
+    public static class LocalExtensions
+    {
+        public static string StrCat(this IEnumerable<string> source)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (string s in source)
+                sb.Append(s);
+            return sb.ToString();
+        }
+    }
+
 }

@@ -17,9 +17,11 @@ namespace CopyFilesIntoRepo
             DirectoryInfo dirToCopy = new DirectoryInfo(@"E:\Sync\300-HtmlConverterTestDocuments\QualityBar");
 
             DirectoryInfo ri = new DirectoryInfo(@"c:\TestFileRepo");
-            Repo r = new Repo(ri);
+            Repo r = new Repo(ri, true);
 
             AddFilesToRepo(r, dirToCopy);
+
+            r.CloseAndSaveMonikerFile();
         }
 
         private static void AddFilesToRepo(Repo r, DirectoryInfo dirToCopy)
