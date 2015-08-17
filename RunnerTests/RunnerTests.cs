@@ -12,6 +12,43 @@ namespace RunnerTests
     public class RunnerTests
     {
         [Fact]
+        public void OxRt018_OpenExistingRepoWithNoMonikers()
+        {
+            var tr = GetTempRepoName();
+            Repo r = new Repo(tr, true);
+            var fileList = GetFileList();
+            foreach (var file in fileList)
+            {
+                var b = r.Store(file, new string[] {} );
+                Assert.True(b);
+            }
+            r.SaveMonikerFile();
+
+            r = new Repo(tr, true);
+            fileList = GetFileList();
+            foreach (var file in fileList)
+            {
+                var b = r.Store(file, new[] { "AnotherMoniker" });
+                Assert.True(b);
+            }
+            r.SaveMonikerFile();
+        }
+
+        [Fact]
+        public void OxRt017_NoMonikers()
+        {
+            var tr = GetTempRepoName();
+            Repo r = new Repo(tr, true);
+            var fileList = GetFileList();
+            foreach (var file in fileList)
+            {
+                var b = r.Store(file, new string[] {} );
+                Assert.True(b);
+            }
+            r.SaveMonikerFile();
+        }
+
+        [Fact]
         public void OxRt016_GetBytesFromRepo()
         {
             var tr = GetTempRepoName();
@@ -22,7 +59,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
 
             r = new Repo(tr);
             var wFiles = r.GetWordprocessingMLFiles();
@@ -43,7 +80,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
 
             r = new Repo(tr);
             fileList = GetFileList();
@@ -51,7 +88,7 @@ namespace RunnerTests
             {
                 Assert.Throws<Exception>(() => r.Store(file, new[] { "AnotherMoniker" }));
             }
-            Assert.Throws<Exception>(() => r.CloseAndSaveMonikerFile());
+            Assert.Throws<Exception>(() => r.SaveMonikerFile());
         }
 
         [Fact]
@@ -65,7 +102,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
 
             r = new Repo(tr, false);
             fileList = GetFileList();
@@ -73,7 +110,7 @@ namespace RunnerTests
             {
                 Assert.Throws<Exception>(() => r.Store(file, new[] { "AnotherMoniker" }));
             }
-            Assert.Throws<Exception>(() => r.CloseAndSaveMonikerFile());
+            Assert.Throws<Exception>(() => r.SaveMonikerFile());
         }
 
         [Fact]
@@ -91,7 +128,7 @@ namespace RunnerTests
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
             Assert.True(b2);
-            var mf = r.CloseAndSaveMonikerFile();
+            var mf = r.SaveMonikerFile();
             newFileName.Delete();
 
             // now duplicate a line in the moniker file
@@ -106,7 +143,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -124,7 +161,7 @@ namespace RunnerTests
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
             Assert.True(b2);
-            var mf = r.CloseAndSaveMonikerFile();
+            var mf = r.SaveMonikerFile();
             newFileName.Delete();
 
             // now duplicate a line in the moniker file
@@ -139,7 +176,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -157,7 +194,7 @@ namespace RunnerTests
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
             Assert.True(b2);
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
             newFileName.Delete();
 
             r = new Repo(tr, true);
@@ -167,7 +204,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -181,7 +218,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
 
             r = new Repo(tr, true);
             fileList = GetFileList();
@@ -190,7 +227,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -209,7 +246,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "Another|Moniker" });
                 Assert.False(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -228,7 +265,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "Another:Moniker" });
                 Assert.False(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -245,7 +282,7 @@ namespace RunnerTests
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
             Assert.False(b2);
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -263,7 +300,7 @@ namespace RunnerTests
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
             Assert.True(b2);
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
             newFileName.Delete();
         }
 
@@ -288,7 +325,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "WhyNot" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -312,7 +349,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -331,7 +368,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { "AnotherMoniker" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -345,7 +382,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length), "TestConformance" });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         [Fact]
@@ -359,7 +396,7 @@ namespace RunnerTests
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
                 Assert.True(b);
             }
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         private List<FileInfo> GetFileList()

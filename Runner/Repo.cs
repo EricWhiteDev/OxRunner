@@ -84,7 +84,10 @@ namespace OxRunner
                     var repoItem = new InternalRepoItem();
                     var key = spl[0];
                     repoItem.Extension = spl[1];
-                    repoItem.Monikers = spl[2].Split(':');
+                    if (spl[2].Contains(':'))
+                        repoItem.Monikers = spl[2].Split(':');
+                    else
+                        repoItem.Monikers = new string[] { };
                     if (m_repoDictionary.ContainsKey(key))
                     {
                         var repoDictionaryEntry = m_repoDictionary[key];
@@ -222,7 +225,7 @@ namespace OxRunner
                 // append to the end of the moniker catalog anyway, even though it will be all be written out by CloseAndSaveMonikerFile
                 // gives a chance to recover if the process adding files to the repo crashes in the middle.
                 var monikerString = monikers.Select(m => m + ":").StrCat().TrimEnd(':');
-                FileUtils.ThreadSafeAppendAllLines(m_fiMonikerCatalog, new[] { hashString + "|." + extensionDirName + "|" + monikerString });
+                FileUtils.ThreadSafeAppendAllLines(m_fiMonikerCatalog, new[] { hashString + "|" + extensionDirName + "|" + monikerString });
             }
             return true;
         }
@@ -244,7 +247,7 @@ namespace OxRunner
             fiToMakeReadonly.IsReadOnly = true;
         }
 
-        public FileInfo CloseAndSaveMonikerFile()
+        public FileInfo SaveMonikerFile()
         {
             if (!m_ReadWrite)
                 throw new Exception("Repo is opened in ReadOnly mode");

@@ -6,29 +6,49 @@ using System.Text;
 using System.Threading.Tasks;
 using OxRunner;
 
+// Important Monikers:
+// HtmlConverter, QualityBar
+// ListItemRetriever
+// RevisionAccepter
+// FormattingAssembler
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+// 
+
 namespace CopyFilesIntoRepo
 {
     public class Program
     {
-        public static string s_Extension = ".docx";
+        public static string s_Pattern = "*.docx";
 
         public static void Main(string[] args)
         {
-            DirectoryInfo dirToCopy = new DirectoryInfo(@"E:\Sync\300-HtmlConverterTestDocuments\QualityBar");
+            DirectoryInfo dirToCopy = new DirectoryInfo(@"E:\Sync\TestFiles");
 
-            DirectoryInfo ri = new DirectoryInfo(@"c:\TestFileRepo");
+            DirectoryInfo ri = new DirectoryInfo(@"C:\TestFileRepo");
             Repo r = new Repo(ri, true);
 
             AddFilesToRepo(r, dirToCopy);
 
-            r.CloseAndSaveMonikerFile();
+            r.SaveMonikerFile();
         }
 
         private static void AddFilesToRepo(Repo r, DirectoryInfo dirToCopy)
         {
-            foreach (var file in dirToCopy.GetFiles(s_Extension))
+            foreach (var file in dirToCopy.GetFiles(s_Pattern))
             {
-                r.Store(file, new[] { "HtmlConverter", "QualityBar" });
+                Console.WriteLine("Adding {0}", file.FullName);
+                r.Store(file, new string[] { });
+            }
+            foreach (var dir in dirToCopy.GetDirectories())
+            {
+                AddFilesToRepo(r, dir);
             }
         }
     }
