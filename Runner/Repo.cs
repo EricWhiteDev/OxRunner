@@ -195,9 +195,9 @@ namespace OxRunner
             // if this hashFileName already exists in the dictionary, then only need to update data structures.
             if (m_repoDictionary.ContainsKey(hashFileName))
             {
-                var existingMonikers = m_repoDictionary[hashString];
+                var existingMonikers = m_repoDictionary[hashFileName];
                 var newMonikerList = existingMonikers.Concat(monikers).Distinct().OrderBy(t => t).ToArray();
-                m_repoDictionary[hashString] = newMonikerList;
+                m_repoDictionary[hashFileName] = newMonikerList;
                 return true;
             }
 
@@ -530,15 +530,6 @@ namespace OxRunner
         #endregion
 
     }
-
-    #region PrivateClasses
-
-    class InternalRepoItem
-    {
-        public string[] Monikers;    // multiple monikers
-    }
-
-    #endregion
 
     public static class LocalExtensions
     {
