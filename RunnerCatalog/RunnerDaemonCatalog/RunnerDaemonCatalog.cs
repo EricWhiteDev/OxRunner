@@ -61,6 +61,8 @@ namespace OxRunner
             MetricsGetterSettings metricsGetterSettings = new MetricsGetterSettings();
             metricsGetterSettings.IncludeTextInContentControls = false;
             metricsGetterSettings.IncludeXlsxTableCellData = false;
+            metricsGetterSettings.RetrieveContentTypeList = true;
+            metricsGetterSettings.RetrieveNamespaceList = true;
 
             while (true)
             {

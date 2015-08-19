@@ -11,10 +11,11 @@
         <Run Exe="\\Bigi5-8\c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
     </If-->
   
+    <!--
     <If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
-                      Args="\\Bigi5-8\c\TestFileRepo"
+                      Args="\\Bigi5-8\e\TestFileRepo"
 					  Skip="null" 
 					  Take="10000" 
 					  />
@@ -22,13 +23,14 @@
 		<WaitForRunnerMaster />
 		<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
     </If>
+    -->
   
     <If MachineName="win8-1">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
-                      Args="\\Bigi5-8\c\TestFileRepo"
+                      Args="\\Bigi5-8\e\TestFileRepo"
 					  Skip="null" 
-					  Take="60000" 
+					  Take="null" 
 					  />
         <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
 		<WaitForRunnerMaster />

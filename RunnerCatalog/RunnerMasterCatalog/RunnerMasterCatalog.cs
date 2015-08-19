@@ -24,9 +24,9 @@ namespace OxRunner
         static void Main(string[] args)
         {
             ConsolePosition.SetConsolePosition(8, true);
-            if (args.Length != 4)
+            if (args.Length != 4 && args.Length != 5)
             {
-                throw new ArgumentException("Arguments to RunnerMaster are incorrect.  Should be 1) number of client computers, 2) doc repo location, 3) Skip, 4) Take");
+                throw new ArgumentException("Arguments to RunnerMaster are incorrect.  Should be 1) number of client computers, 2) doc repo location, 3) Skip, 4) Take, [ 5) guidName (optional)]");
             }
             if (!int.TryParse(args[0], out m_NumberOfClientComputers))
                 m_NumberOfClientComputers = 1;
@@ -35,6 +35,10 @@ namespace OxRunner
                 m_Skip = int.Parse(args[2]);
             if (args[3] != "null")
                 m_Take = int.Parse(args[3]);
+
+            // temporarily, going to skip looking for the specific file argument.
+            // all this is going to be rewritten soon anyway.
+
             m_Repo = new Repo(m_DiRepo);
             var runnerMaster = new RunnerMasterCatalog();
             runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterCatalog");

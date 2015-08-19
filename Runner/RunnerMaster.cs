@@ -171,7 +171,7 @@ namespace OxRunner
                 if (currentJob == null)
                 {
                     currentJob = new List<string>();
-                    itemsInThisJob = CalcItemsInCurrentJob(remainingItems, totalWorkDaemons, 300);
+                    itemsInThisJob = CalcItemsInCurrentJob(remainingItems, totalWorkDaemons, 20);
                 }
                 currentJob.Add(item);
                 itemsInThisJob--;
@@ -231,7 +231,7 @@ namespace OxRunner
             double maxSecondsPerJob = ((double)remainingSeconds / (double)totalWorkDaemons) / divisor;
             List<string> currentJob = null;
             double secondsInThisJob = 0.0;
-            int maxItemsPerJob = 300;
+            int maxItemsPerJob = 20;
             int itemsInThisJob = 0;
 
             foreach (var item in workItemsWithMetrics)
