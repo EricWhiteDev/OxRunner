@@ -4,14 +4,13 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{5471EFB9-AC0E-4D58-B27E-BD158C9EF309}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{C0F38978-83B7-433E-A6DA-84E190217A48}</ProjectGuid>
+    <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>ControllerMaster</RootNamespace>
-    <AssemblyName>ControllerMaster</AssemblyName>
+    <RootNamespace>Runner._64</RootNamespace>
+    <AssemblyName>Runner.64</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -31,9 +30,6 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
-  <PropertyGroup>
-    <StartupObject />
-  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -45,17 +41,34 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="ControllerMaster.cs" />
+    <Compile Include="..\Runner\ConsolePosition.cs">
+      <Link>ConsolePosition.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\ExecutableRunner.cs">
+      <Link>ExecutableRunner.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\FileUtils.cs">
+      <Link>FileUtils.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\Repo.cs">
+      <Link>Repo.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\Runner.cs">
+      <Link>Runner.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\RunnerDaemon.cs">
+      <Link>RunnerDaemon.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\RunnerLog.cs">
+      <Link>RunnerLog.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\RunnerMaster.cs">
+      <Link>RunnerMaster.cs</Link>
+    </Compile>
+    <Compile Include="..\Runner\VSTools.cs">
+      <Link>VSTools.cs</Link>
+    </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="app.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Runner.64\Runner.64.csproj">
-      <Project>{c0f38978-83b7-433e-a6da-84e190217a48}</Project>
-      <Name>Runner.64</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
