@@ -51,6 +51,7 @@ namespace OxRunner
         public DirectoryInfo m_repoLocation;
         public XElement m_metricsCatalog = null;
         public Dictionary<string, XElement> m_metricsDictionary = null;
+        public FileInfo m_fiCurrentMonikerCatalog = null;
 
         private bool m_ReadWrite;
         public bool ReadWrite
@@ -78,14 +79,16 @@ namespace OxRunner
             m_repoLocation = repoLocation;
             FileUtils.ThreadSafeCreateDirectory(m_repoLocation);
 
-            var fiMonikerCatalog = m_repoLocation
+            m_fiCurrentMonikerCatalog = m_repoLocation
                 .GetFiles("MonikerCatalog*")
                 .OrderBy(t => t.CreationTime)
                 .LastOrDefault();
 
-            if (fiMonikerCatalog != null)
+            if (m_fiCurrentMonikerCatalog != null)
             {
-                using (StreamReader sr = new StreamReader(fiMonikerCatalog.FullName))
+                //int countOfExistingFiles = 0;
+
+                using (StreamReader sr = new StreamReader(m_fiCurrentMonikerCatalog.FullName))
                 {
                     foreach (var line in Lines(sr))
                     {
@@ -105,37 +108,55 @@ namespace OxRunner
                         {
                             var existingMonikers = m_repoDictionary[key];
                             var newMonikers = existingMonikers.Concat(monikers).Where(m => m != "").OrderBy(m => m).Distinct().ToArray();
-                            m_repoDictionary[key] = monikers;
+                            m_repoDictionary[key] = newMonikers;
+
+                            //++countOfExistingFiles;
                         }
                         else
                             m_repoDictionary.Add(key, monikers);
                     }
                 }
+
+                //Console.WriteLine(countOfExistingFiles);
+                //Console.WriteLine();
             }
         }
 
-        public bool Store(FileInfo file, string[] monikers)
+        public enum StoreStatus
+        {
+            // success
+            Stored,
+            StoredWithAdditionalMonikers,
+            AlreadyExistsInRepoWithSameMonikers,
+
+            // error
+            FileHasNoExtension,
+            InvalidMoniker,
+            FileDoesNotExist,
+        }
+
+        public StoreStatus Store(FileInfo file, string[] monikers)
         {
             if (m_ReadWrite == false)
                 throw new Exception("Repo is opened for readonly access");
 
             if (file.Extension == "")
             {
-                Console.WriteLine("File {0} has no extension", file.Name);
-                return false;
+                //Console.WriteLine("File {0} has no extension", file.Name);
+                return StoreStatus.FileHasNoExtension;
             }
 
             foreach (var item in monikers)
             {
                 if (item.Contains(':'))
                 {
-                    Console.WriteLine("Moniker {0} contains colon", item);
-                    return false;
+                    //Console.WriteLine("Moniker {0} contains colon", item);
+                    return StoreStatus.InvalidMoniker;
                 }
                 if (item.Contains('|'))
                 {
-                    Console.WriteLine("Moniker {0} contains pipe symbol", item);
-                    return false;
+                    //Console.WriteLine("Moniker {0} contains pipe symbol", item);
+                    return StoreStatus.InvalidMoniker;
                 }
             }
 
@@ -147,8 +168,8 @@ namespace OxRunner
                 {
                     if (!file.Exists)
                     {
-                        Console.WriteLine("File {0} does not exist", file.FullName);
-                        return false;
+                        //Console.WriteLine("File {0} does not exist", file.FullName);
+                        return StoreStatus.FileDoesNotExist;
                     }
                 }
                 catch (System.UnauthorizedAccessException)
@@ -195,15 +216,29 @@ namespace OxRunner
             // if this hashFileName already exists in the dictionary, then only need to update data structures.
             if (m_repoDictionary.ContainsKey(hashFileName))
             {
-                var existingMonikers = m_repoDictionary[hashFileName];
+                var existingMonikers = m_repoDictionary[hashFileName].OrderBy(t => t).ToArray();
                 var newMonikerList = existingMonikers.Concat(monikers).Distinct().OrderBy(t => t).ToArray();
+                // if no change in monikers, nothing to do
+                if (existingMonikers.SequenceEqual(newMonikerList))
+                    return StoreStatus.AlreadyExistsInRepoWithSameMonikers;
                 m_repoDictionary[hashFileName] = newMonikerList;
-                return true;
+                SaveMonikerFile();
+                return StoreStatus.StoredWithAdditionalMonikers;
             }
 
             CopyFileIntoRepo(file, hashString, extensionDirName);
             m_repoDictionary.Add(hashFileName, monikers);
-            return true;
+
+            if (m_fiCurrentMonikerCatalog == null)
+                SaveMonikerFile();
+            else
+            {
+                var monikerString = monikers.Select(m => m + ":").StrCat().TrimEnd(':');
+                var lineToAdd = hashFileName + "|" + monikerString;
+                File.AppendAllLines(m_fiCurrentMonikerCatalog.FullName, new[] { lineToAdd });
+            }
+
+            return StoreStatus.Stored;
         }
 
         private void CopyFileIntoRepo(FileInfo file, string hashString, string extensionDirName)
@@ -230,8 +265,10 @@ namespace OxRunner
 
             DateTime n = DateTime.Now;
             var monikerName = string.Format("MonikerCatalog-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}-{6:000}.txt", n.Year - 2000, n.Month, n.Day, n.Hour, n.Minute, n.Second, n.Millisecond);
-            var fiMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, monikerName));
-            using (StreamWriter sw = new StreamWriter(fiMonikerCatalog.FullName))
+            m_fiCurrentMonikerCatalog = new FileInfo(Path.Combine(m_repoLocation.FullName, monikerName));
+            if (m_fiCurrentMonikerCatalog.Exists)
+                m_fiCurrentMonikerCatalog.Delete();
+            using (StreamWriter sw = new StreamWriter(m_fiCurrentMonikerCatalog.FullName))
             {
                 foreach (var item in m_repoDictionary)
                 {
@@ -240,12 +277,20 @@ namespace OxRunner
                     sw.Write(line);
                 }
             }
-            return fiMonikerCatalog;
+            //TimeSpan ts = DateTime.Now - n;
+            //var z = ts.ToString();
+            //Console.WriteLine(z);
+            return m_fiCurrentMonikerCatalog;
         }
 
         #region AccessMethods
 
         // The methods here do not impact the repo in any way.
+
+        public int GetRepoLength()
+        {
+            return m_repoDictionary.Count();
+        }
 
         // hashFileName is the hash plus the extension, i.e. A45E0E6EF4CAB5D21F310BE41D4217679D2F83BE.docx
         public RepoItem GetRepoItem(string hashFileName)

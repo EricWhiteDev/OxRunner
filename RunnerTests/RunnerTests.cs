@@ -7,12 +7,31 @@ using System.Threading.Tasks;
 using OxRunner;
 using Xunit;
 
-namespace RunnerTests
-{
-    public class RunnerTests
+//namespace RunnerTests
+//{
+    public class Rt
     {
         [Fact]
-        public void OxRt018_OpenExistingRepoWithNoMonikers()
+        public void T019_StoreFileWithNoExtension()
+        {
+            var tr = GetTempRepoName();
+            Repo r = new Repo(tr, true);
+            var fileList = GetFileList();
+            foreach (var file in fileList)
+            {
+                var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
+                Assert.True(b == Repo.StoreStatus.Stored);
+            }
+            var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", ""));
+            File.Copy(fileList.First().FullName, newFileName.FullName);
+            var b2 = r.Store(newFileName, new[] { "blat", "biff" });
+            Assert.True(b2 == Repo.StoreStatus.FileHasNoExtension);
+            r.SaveMonikerFile();
+            newFileName.Delete();
+        }
+
+        [Fact]
+        public void T018_OpenExistingRepoWithNoMonikers()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -20,7 +39,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new string[] {} );
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
 
@@ -29,13 +48,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt017_NoMonikers()
+        public void T017_NoMonikers()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -43,13 +62,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new string[] {} );
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt016_GetBytesFromRepo()
+        public void T016_GetBytesFromRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -57,7 +76,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
 
@@ -70,7 +89,7 @@ namespace RunnerTests
         }
 
         [Fact]
-        public void OxRt015_TryToStoreInRepoThatIsReadOnly2()
+        public void T015_TryToStoreInRepoThatIsReadOnly2()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -78,7 +97,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
 
@@ -92,7 +111,7 @@ namespace RunnerTests
         }
 
         [Fact]
-        public void OxRt014_TryToStoreInRepoThatIsReadOnly()
+        public void T014_TryToStoreInRepoThatIsReadOnly()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -100,7 +119,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
 
@@ -114,7 +133,7 @@ namespace RunnerTests
         }
 
         [Fact]
-        public void OxRt013_TestInvalidMonikerCatWithDupItems()
+        public void T013_TestInvalidMonikerCatWithDupItems()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -122,12 +141,12 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
-            Assert.True(b2);
+            Assert.True(b2 == Repo.StoreStatus.Stored);
             var mf = r.SaveMonikerFile();
             newFileName.Delete();
 
@@ -141,13 +160,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt012_TestInvalidMonikerCatWithDupItems()
+        public void T012_TestInvalidMonikerCatWithDupItems()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -155,12 +174,12 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
-            Assert.True(b2);
+            Assert.True(b2 == Repo.StoreStatus.Stored);
             var mf = r.SaveMonikerFile();
             newFileName.Delete();
 
@@ -174,13 +193,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt011_OpenExistingRepoWithDupHash()
+        public void T011_OpenExistingRepoWithDupHash()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -188,12 +207,12 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
-            Assert.True(b2);
+            Assert.True(b2 == Repo.StoreStatus.Stored);
             r.SaveMonikerFile();
             newFileName.Delete();
 
@@ -202,13 +221,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt010_OpenExistingRepo()
+        public void T010_OpenExistingRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -216,7 +235,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
 
@@ -225,13 +244,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt009_AddMonikerWithPipe()
+        public void T009_AddMonikerWithPipe()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -239,18 +258,18 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "Another|Moniker" });
-                Assert.False(b);
+                Assert.True(b == Repo.StoreStatus.InvalidMoniker);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt008_AddMonikerWithColon()
+        public void T008_AddMonikerWithColon()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -258,18 +277,18 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "Another:Moniker" });
-                Assert.False(b);
+                Assert.True(b == Repo.StoreStatus.InvalidMoniker);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt007_AddNonexistentFileIntoRepo()
+        public void T007_AddNonexistentFileIntoRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -277,16 +296,16 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
-            Assert.False(b2);
+            Assert.True(b2 == Repo.StoreStatus.FileDoesNotExist);
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt006_AddWithSameHashDifferentExtension()
+        public void T006_AddWithSameHashDifferentExtension()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -294,18 +313,18 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             var newFileName = new FileInfo(Guid.NewGuid().ToString().Replace("-", "") + ".foo");
             File.Copy(fileList.First().FullName, newFileName.FullName);
             var b2 = r.Store(newFileName, new[] { "blat", "biff" });
-            Assert.True(b2);
+            Assert.True(b2 == Repo.StoreStatus.Stored);
             r.SaveMonikerFile();
             newFileName.Delete();
         }
 
         [Fact]
-        public void OxRt005_AddEvenMoreMonikersAfterInRepo()
+        public void T005_AddEvenMoreMonikersAfterInRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -313,23 +332,23 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "WhyNot" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt004_AddDuplicateMonikerAfterInRepo()
+        public void T004_AddDuplicateMonikerAfterInRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -337,23 +356,23 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.AlreadyExistsInRepoWithSameMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt003_AddMonikerAfterInRepo()
+        public void T003_AddMonikerAfterInRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -361,18 +380,18 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { "AnotherMoniker" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.StoredWithAdditionalMonikers);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt002_TwoMonikersPer()
+        public void T002_TwoMonikersPer()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -380,13 +399,13 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length), "TestConformance" });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
         }
 
         [Fact]
-        public void OxRt001_CreateRepo()
+        public void T001_CreateRepo()
         {
             var tr = GetTempRepoName();
             Repo r = new Repo(tr, true);
@@ -394,7 +413,7 @@ namespace RunnerTests
             foreach (var file in fileList)
             {
                 var b = r.Store(file, new[] { file.FullName.Substring(@"C:\Users\Eric\Documents\Open-Xml-Sdk\TestFiles\".Length) });
-                Assert.True(b);
+                Assert.True(b == Repo.StoreStatus.Stored);
             }
             r.SaveMonikerFile();
         }
@@ -413,4 +432,4 @@ namespace RunnerTests
             return new DirectoryInfo(tempRepoName);
         }
     }
-}
+//}
