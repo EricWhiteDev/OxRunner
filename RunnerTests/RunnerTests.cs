@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 using OxRunner;
 using Xunit;
 
+// to run the X64 tests:
+// packages\xunit.runner.console.2.0.0\tools\xunit.console RunnerTests\bin\Debug\RunnerTests.dll
+
 //namespace RunnerTests
 //{
     public class Rt

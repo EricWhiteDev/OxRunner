@@ -21,6 +21,7 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x64</PlatformTarget>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -33,14 +34,15 @@
   <ItemGroup>
     <Reference Include="DocumentFormat.OpenXml, Version=2.5.5631.0, Culture=neutral, PublicKeyToken=31bf3856ad364e35, processorArchitecture=MSIL">
       <SpecificVersion>False</SpecificVersion>
-      <HintPath>..\..\..\Open-Xml-Sdk\DocumentFormat.OpenXml\bin\Debug\DocumentFormat.OpenXml.dll</HintPath>
+      <HintPath>..\..\..\Open-Xml-Sdk\DocumentFormat.OpenXml.64\bin\Debug\DocumentFormat.OpenXml.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.IO.Packaging">
-      <HintPath>..\..\..\Open-Xml-Sdk\DocumentFormat.OpenXml\bin\Debug\System.IO.Packaging.dll</HintPath>
+      <HintPath>..\..\..\Open-Xml-Sdk\DocumentFormat.OpenXml.64\bin\Debug\System.IO.Packaging.dll</HintPath>
     </Reference>
     <Reference Include="System.Messaging" />
+    <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -52,13 +54,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\OpenXmlPowerTools\OpenXmlPowerTools.csproj">
-      <Project>{4053cfe0-5880-4cfe-9bc0-be41e094d4bc}</Project>
-      <Name>OpenXmlPowerTools</Name>
+    <ProjectReference Include="..\..\OpenXmlPowerTools.64\OpenXmlPowerTools.64.csproj">
+      <Project>{a47ccf28-da99-4596-b305-04d6b9db6eb6}</Project>
+      <Name>OpenXmlPowerTools.64</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Runner\Runner.csproj">
-      <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
-      <Name>Runner</Name>
+    <ProjectReference Include="..\..\Runner.64\Runner.64.csproj">
+      <Project>{c0f38978-83b7-433e-a6da-84e190217a48}</Project>
+      <Name>Runner.64</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

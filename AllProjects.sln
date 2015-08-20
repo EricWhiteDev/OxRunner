@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.31101.0
+VisualStudioVersion = 12.0.21005.1
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ControllerDaemon", "ControllerDaemon\ControllerDaemon.csproj", "{69D55E31-7A3F-448F-BA77-928AF035FA74}"
 EndProject
@@ -42,6 +42,13 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerTests", "RunnerTests\RunnerTests.csproj", "{9E5A3601-C6C0-4E92-BFB5-4EF822250BEB}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner.64", "Runner.64\Runner.64.csproj", "{C0F38978-83B7-433E-A6DA-84E190217A48}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenXmlPowerTools.64", "OpenXmlPowerTools.64\OpenXmlPowerTools.64.csproj", "{A47CCF28-DA99-4596-B305-04D6B9DB6EB6}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{902A409B-510B-4E32-8D34-D7F94790AD31}"
+	ProjectSection(SolutionItems) = preProject
+		.nuget\packages.config = .nuget\packages.config
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -129,6 +136,10 @@ Global
 		{C0F38978-83B7-433E-A6DA-84E190217A48}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0F38978-83B7-433E-A6DA-84E190217A48}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0F38978-83B7-433E-A6DA-84E190217A48}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A47CCF28-DA99-4596-B305-04D6B9DB6EB6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A47CCF28-DA99-4596-B305-04D6B9DB6EB6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A47CCF28-DA99-4596-B305-04D6B9DB6EB6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A47CCF28-DA99-4596-B305-04D6B9DB6EB6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
