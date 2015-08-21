@@ -99,7 +99,7 @@ namespace CopyFilesIntoRepo
 
         public static void Main(string[] args)
         {
-            Repo r = new Repo(TheRepoToOperateOn, true);
+            Repo r = new Repo(TheRepoToOperateOn, RepoAccessLevel.ReadWrite);
             s_RepoLength = r.GetRepoLength();
             foreach (var dirToCopy in s_DirectoriesToSearch)
             {

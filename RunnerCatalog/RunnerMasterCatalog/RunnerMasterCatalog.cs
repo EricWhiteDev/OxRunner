@@ -39,7 +39,7 @@ namespace OxRunner
             // temporarily, going to skip looking for the specific file argument.
             // all this is going to be rewritten soon anyway.
 
-            m_Repo = new Repo(m_DiRepo);
+            m_Repo = new Repo(m_DiRepo, RepoAccessLevel.ReadOnly);
             var runnerMaster = new RunnerMasterCatalog();
             runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterCatalog");
             runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Number of client computers: {0}", m_NumberOfClientComputers));

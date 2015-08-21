@@ -46,31 +46,32 @@ namespace OxRunner
         }
     }
 
+    public enum RepoAccessLevel
+    {
+        FileAccessOnly,
+        ReadOnly,
+        ReadWrite,
+    }
+
     public class Repo
     {
         public DirectoryInfo m_repoLocation;
         public XElement m_metricsCatalog = null;
         public Dictionary<string, XElement> m_metricsDictionary = null;
         public FileInfo m_fiCurrentMonikerCatalog = null;
+        private RepoAccessLevel m_repoAccessLevel;
 
-        private bool m_ReadWrite;
         public bool ReadWrite
         {
             get
             {
-                return m_ReadWrite;
+                return m_repoAccessLevel == RepoAccessLevel.ReadWrite;
             }
         }
 
-        public Repo(DirectoryInfo repoLocation)
+        public Repo(DirectoryInfo repoLocation, RepoAccessLevel repoAccessLevel)
         {
-            m_ReadWrite = false;
-            LoadRepo(repoLocation);
-        }
-
-        public Repo(DirectoryInfo repoLocation, bool readWrite)
-        {
-            m_ReadWrite = readWrite;
+            m_repoAccessLevel = repoAccessLevel;
             LoadRepo(repoLocation);
         }
 
@@ -79,46 +80,49 @@ namespace OxRunner
             m_repoLocation = repoLocation;
             FileUtils.ThreadSafeCreateDirectory(m_repoLocation);
 
-            m_fiCurrentMonikerCatalog = m_repoLocation
-                .GetFiles("MonikerCatalog*")
-                .OrderBy(t => t.CreationTime)
-                .LastOrDefault();
-
-            if (m_fiCurrentMonikerCatalog != null)
+            if (m_repoAccessLevel != RepoAccessLevel.FileAccessOnly)
             {
-                //int countOfExistingFiles = 0;
+                m_fiCurrentMonikerCatalog = m_repoLocation
+                    .GetFiles("MonikerCatalog*")
+                    .OrderBy(t => t.CreationTime)
+                    .LastOrDefault();
 
-                using (StreamReader sr = new StreamReader(m_fiCurrentMonikerCatalog.FullName))
+                if (m_fiCurrentMonikerCatalog != null)
                 {
-                    foreach (var line in Lines(sr))
+                    //int countOfExistingFiles = 0;
+
+                    using (StreamReader sr = new StreamReader(m_fiCurrentMonikerCatalog.FullName))
                     {
-                        var spl = line.Split('|');
-                        string[] monikers;
-                        var key = spl[0];
-                        if (spl[1].Contains(':'))
-                            monikers = spl[1].Split(':');
-                        else
+                        foreach (var line in Lines(sr))
                         {
-                            if (spl[1] == "")
-                                monikers = new string[] { };  // create an empty array
+                            var spl = line.Split('|');
+                            string[] monikers;
+                            var key = spl[0];
+                            if (spl[1].Contains(':'))
+                                monikers = spl[1].Split(':');
                             else
-                                monikers = new string[] { spl[1] };  // create array with one element
-                        }
-                        if (m_repoDictionary.ContainsKey(key))
-                        {
-                            var existingMonikers = m_repoDictionary[key];
-                            var newMonikers = existingMonikers.Concat(monikers).Where(m => m != "").OrderBy(m => m).Distinct().ToArray();
-                            m_repoDictionary[key] = newMonikers;
+                            {
+                                if (spl[1] == "")
+                                    monikers = new string[] { };  // create an empty array
+                                else
+                                    monikers = new string[] { spl[1] };  // create array with one element
+                            }
+                            if (m_repoDictionary.ContainsKey(key))
+                            {
+                                var existingMonikers = m_repoDictionary[key];
+                                var newMonikers = existingMonikers.Concat(monikers).Where(m => m != "").OrderBy(m => m).Distinct().ToArray();
+                                m_repoDictionary[key] = newMonikers;
 
-                            //++countOfExistingFiles;
+                                //++countOfExistingFiles;
+                            }
+                            else
+                                m_repoDictionary.Add(key, monikers);
                         }
-                        else
-                            m_repoDictionary.Add(key, monikers);
                     }
-                }
 
-                //Console.WriteLine(countOfExistingFiles);
-                //Console.WriteLine();
+                    //Console.WriteLine(countOfExistingFiles);
+                    //Console.WriteLine();
+                }
             }
         }
 
@@ -137,8 +141,8 @@ namespace OxRunner
 
         public StoreStatus Store(FileInfo file, string[] monikers)
         {
-            if (m_ReadWrite == false)
-                throw new Exception("Repo is opened for readonly access");
+            if (m_repoAccessLevel != RepoAccessLevel.ReadWrite)
+                throw new Exception("Repo is not opened for Read/Write access");
 
             if (file.Extension == "")
             {
@@ -260,8 +264,8 @@ namespace OxRunner
 
         public FileInfo SaveMonikerFile()
         {
-            if (!m_ReadWrite)
-                throw new Exception("Repo is opened in ReadOnly mode");
+            if (m_repoAccessLevel != RepoAccessLevel.ReadWrite)
+                throw new Exception("Repo is not opened for Read/Write access");
 
             DateTime n = DateTime.Now;
             var monikerName = string.Format("MonikerCatalog-{0:00}-{1:00}-{2:00}-{3:00}{4:00}{5:00}-{6:000}.txt", n.Year - 2000, n.Month, n.Day, n.Hour, n.Minute, n.Second, n.Millisecond);
@@ -558,6 +562,12 @@ namespace OxRunner
             var spl = hashFileName.Split('.');
             var hash = spl[0];
             var extension = spl[1];
+            if (m_repoAccessLevel == RepoAccessLevel.FileAccessOnly)
+            {
+                RepoItem repoItem = new RepoItem();
+                repoItem.HashFileName = hashFileName;
+                return repoItem;
+            }
             try
             {
                 var monikers = m_repoDictionary[hashFileName];

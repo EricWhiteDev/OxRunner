@@ -18,7 +18,7 @@ using Xunit;
         public void T019_StoreFileWithNoExtension()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -37,7 +37,7 @@ using Xunit;
         public void T018_OpenExistingRepoWithNoMonikers()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -46,7 +46,7 @@ using Xunit;
             }
             r.SaveMonikerFile();
 
-            r = new Repo(tr, true);
+            r = new Repo(tr, RepoAccessLevel.ReadWrite);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -60,7 +60,7 @@ using Xunit;
         public void T017_NoMonikers()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -74,7 +74,7 @@ using Xunit;
         public void T016_GetBytesFromRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -83,7 +83,7 @@ using Xunit;
             }
             r.SaveMonikerFile();
 
-            r = new Repo(tr);
+            r = new Repo(tr, RepoAccessLevel.ReadOnly);
             var wFiles = r.GetWordprocessingMLFiles();
             var z = wFiles.FirstOrDefault();
             var ri = r.GetRepoItem(z);
@@ -95,7 +95,7 @@ using Xunit;
         public void T015_TryToStoreInRepoThatIsReadOnly2()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -104,7 +104,7 @@ using Xunit;
             }
             r.SaveMonikerFile();
 
-            r = new Repo(tr);
+            r = new Repo(tr, RepoAccessLevel.ReadOnly);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -117,7 +117,7 @@ using Xunit;
         public void T014_TryToStoreInRepoThatIsReadOnly()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -126,7 +126,7 @@ using Xunit;
             }
             r.SaveMonikerFile();
 
-            r = new Repo(tr, false);
+            r = new Repo(tr, RepoAccessLevel.ReadOnly);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -139,7 +139,7 @@ using Xunit;
         public void T013_TestInvalidMonikerCatWithDupItems()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -158,7 +158,7 @@ using Xunit;
             var l2 = l1.Concat(new[] { l1[0] + ":Whatever" }).ToArray();
             File.WriteAllLines(mf.FullName, l2);
 
-            r = new Repo(tr, true);
+            r = new Repo(tr, RepoAccessLevel.ReadWrite);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -172,7 +172,7 @@ using Xunit;
         public void T012_TestInvalidMonikerCatWithDupItems()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -191,7 +191,7 @@ using Xunit;
             var l2 = new[] { l1[0] }.Concat(l1).ToArray();
             File.WriteAllLines(mf.FullName, l2);
 
-            r = new Repo(tr, true);
+            r = new Repo(tr, RepoAccessLevel.ReadWrite);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -205,7 +205,7 @@ using Xunit;
         public void T011_OpenExistingRepoWithDupHash()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -219,7 +219,7 @@ using Xunit;
             r.SaveMonikerFile();
             newFileName.Delete();
 
-            r = new Repo(tr, true);
+            r = new Repo(tr, RepoAccessLevel.ReadWrite);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -233,7 +233,7 @@ using Xunit;
         public void T010_OpenExistingRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -242,7 +242,7 @@ using Xunit;
             }
             r.SaveMonikerFile();
 
-            r = new Repo(tr, true);
+            r = new Repo(tr, RepoAccessLevel.ReadWrite);
             fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -256,7 +256,7 @@ using Xunit;
         public void T009_AddMonikerWithPipe()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -275,7 +275,7 @@ using Xunit;
         public void T008_AddMonikerWithColon()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -294,7 +294,7 @@ using Xunit;
         public void T007_AddNonexistentFileIntoRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -311,7 +311,7 @@ using Xunit;
         public void T006_AddWithSameHashDifferentExtension()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -330,7 +330,7 @@ using Xunit;
         public void T005_AddEvenMoreMonikersAfterInRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -354,7 +354,7 @@ using Xunit;
         public void T004_AddDuplicateMonikerAfterInRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -378,7 +378,7 @@ using Xunit;
         public void T003_AddMonikerAfterInRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -397,7 +397,7 @@ using Xunit;
         public void T002_TwoMonikersPer()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {
@@ -411,7 +411,7 @@ using Xunit;
         public void T001_CreateRepo()
         {
             var tr = GetTempRepoName();
-            Repo r = new Repo(tr, true);
+            Repo r = new Repo(tr, RepoAccessLevel.ReadWrite);
             var fileList = GetFileList();
             foreach (var file in fileList)
             {

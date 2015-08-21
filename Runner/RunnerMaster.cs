@@ -202,6 +202,8 @@ namespace OxRunner
             List<List<string>> jobs = new List<List<string>>();
             var filteredWorkItems = workItems.Where(i => i != "");
 
+            Random r = new Random();
+
             // process all documents that take a long time first.
             var workItemsWithMetrics = filteredWorkItems
                 .Select(wi =>
@@ -215,9 +217,18 @@ namespace OxRunner
                     {
                         Item = wi,
                         Ticks = ticks,
+                        Rnd = r.Next(1000),
                     };
                 })
                 .OrderByDescending(wi => wi.Ticks)
+                .ToList();
+
+            // randomize the first 30% so that we don't end up in situation where one machine has 5 difficult documents
+            int first30pct = (int)(workItemsWithMetrics.Count() * 0.3);
+            workItemsWithMetrics = workItemsWithMetrics
+                .Take(first30pct)
+                .OrderBy(wi => wi.Rnd)
+                .Concat(workItemsWithMetrics.Skip(first30pct))
                 .ToList();
 
             double totalSeconds = (workItemsWithMetrics

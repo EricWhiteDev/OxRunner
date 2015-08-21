@@ -24,18 +24,6 @@ namespace OxRunner
 
         static void Main(string[] args)
         {
-#if false
-            FileInfo fi = new FileInfo(@"C:\TestFileRepo\xlsx\00\00059253606EA3001619D73993922C2E39D38F.xlsx");
-            MetricsGetterSettings metricsGetterSettings = new MetricsGetterSettings();
-            metricsGetterSettings.IncludeTextInContentControls = false;
-            metricsGetterSettings.IncludeXlsxTableCellData = false;
-            var metrics = MetricsGetter.GetMetrics(fi.FullName, metricsGetterSettings);
-            metrics.Name = "Document";
-            metrics.Add(new XAttribute("GuidName", fi.Name));
-            Console.WriteLine(metrics);
-            Environment.Exit(0);
-#endif
-
             if (args.Length == 0)
                 throw new ArgumentException("ControllerDaemon did not pass any arguments to RunnerDaemon");
 
@@ -54,6 +42,17 @@ namespace OxRunner
 
             runnerDaemon.SendDaemonReadyMessage();
             runnerDaemon.MessageLoop();
+        }
+
+        private class RunnerDaemonThreadData
+        {
+            public MetricsGetterSettings MetricsGetterSettings;
+            public string GuidName;
+            public FileInfo FiRepoItem;
+            public bool? CollectProcessTimeMetrics;
+            public int? TimeoutInMiliseconds;
+            public XElement ReturnValue;
+            public DateTime PrevTime;
         }
 
         private void MessageLoop()
@@ -96,26 +95,11 @@ namespace OxRunner
                                 var guidName = d.Attribute("GuidName").Value;
                                 RepoItem ri = m_Repo.GetRepoItem(guidName);
                                 PrintToConsole(guidName);
-                                try
-                                {
-                                    var metrics = MetricsGetter.GetMetrics(ri.FiRepoItem.FullName, metricsGetterSettings);
-                                    metrics.Name = "Document";
-                                    metrics.Add(new XAttribute("GuidName", guidName));
-                                    if (collectProcessTimeMetrics == true)
-                                    {
-                                        DateTime currentTime = DateTime.Now;
-                                        var ticks = (currentTime - prevTime).Ticks;
-                                        metrics.Add(new XAttribute("Ticks", ticks));
-                                        prevTime = currentTime;
-                                    }
-                                    return metrics;
-                                }
-                                catch (PowerToolsDocumentException e)
+                                if (Util.IsSpreadsheetML(ri.FiRepoItem.Extension) && ri.FiRepoItem.Length > 2000000)
                                 {
                                     var errorXml = new XElement("Document",
                                         new XAttribute("GuidName", guidName),
-                                        new XElement("PowerToolsDocumentException",
-                                            MakeValidXml(e.ToString())));
+                                        new XElement("XlsxFileTooBigSkipping"));
                                     if (collectProcessTimeMetrics == true)
                                     {
                                         DateTime currentTime = DateTime.Now;
@@ -125,39 +109,128 @@ namespace OxRunner
                                     }
                                     return errorXml;
                                 }
-                                catch (FileFormatException e)
+
+                                int? timeoutInMiliseconds = 10000;    //   <================================================================================================================================= parameterize this
+
+                                RunnerDaemonThreadData rdts = new RunnerDaemonThreadData()
                                 {
-                                    var errorXml = new XElement("Document",
-                                        new XAttribute("GuidName", guidName),
-                                        new XElement("FileFormatException",
-                                            MakeValidXml(e.ToString())));
-                                    if (collectProcessTimeMetrics == true)
-                                    {
-                                        DateTime currentTime = DateTime.Now;
-                                        var ticks = (currentTime - prevTime).Ticks;
-                                        errorXml.Add(new XAttribute("Ticks", ticks));
-                                        prevTime = currentTime;
-                                    }
-                                    return errorXml;
-                                }
-                                catch (Exception e)
+                                    MetricsGetterSettings = metricsGetterSettings,
+                                    CollectProcessTimeMetrics = collectProcessTimeMetrics,
+                                    GuidName = guidName,
+                                    PrevTime = DateTime.Now,
+                                    FiRepoItem = ri.FiRepoItem,
+                                    TimeoutInMiliseconds = timeoutInMiliseconds,
+                                    ReturnValue = null,
+                                };
+                                System.Threading.ParameterizedThreadStart tcd = new System.Threading.ParameterizedThreadStart(RunnerDaemonCode);
+                                System.Threading.Thread thread = new System.Threading.Thread(tcd);
+                                System.Timers.Timer t = null;
+                                if (timeoutInMiliseconds != null)
                                 {
-                                    var errorXml = new XElement("Document",
-                                        new XAttribute("GuidName", guidName),
-                                        new XElement("Exception",
-                                            MakeValidXml(e.ToString())));
-                                    if (collectProcessTimeMetrics == true)
+                                    t = new System.Timers.Timer((int)timeoutInMiliseconds);
+                                    t.Elapsed += (source, eventArgs) =>
                                     {
-                                        DateTime currentTime = DateTime.Now;
-                                        var ticks = (currentTime - prevTime).Ticks;
-                                        errorXml.Add(new XAttribute("Ticks", ticks));
-                                        prevTime = currentTime;
-                                    }
-                                    return errorXml;
+                                        t.Enabled = false;
+                                        thread.Abort();
+                                    };
+                                    t.Enabled = true;
                                 }
+                                thread.Start(rdts);
+                                thread.Join();
+                                if (t != null)
+                                    t.Enabled = false;
+                                return rdts.ReturnValue;
                             })));
                     Runner.SendMessage("WorkComplete", cmsg, m_RunnerMasterMachineName, OxRunConstants.RunnerMasterQueueName);
                 }
+            }
+        }
+
+        private static void RunnerDaemonCode(object dataObject)
+        {
+            RunnerDaemonThreadData data = (RunnerDaemonThreadData)dataObject;
+            try
+            {
+                long workingSetBefore = Environment.WorkingSet;
+                var metrics = MetricsGetter.GetMetrics(data.FiRepoItem.FullName, data.MetricsGetterSettings);
+                long workingSetAfter = Environment.WorkingSet;
+                metrics.Name = "Document";
+                metrics.Add(new XAttribute("GuidName", data.GuidName));
+                metrics.Add(new XAttribute("WorkingSetBefore", workingSetBefore));
+                metrics.Add(new XAttribute("WorkingSetAfter", workingSetAfter));
+                if (data.CollectProcessTimeMetrics == true)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    var ticks = (currentTime - data.PrevTime).Ticks;
+                    metrics.Add(new XAttribute("Ticks", ticks));
+                    data.PrevTime = currentTime;
+                }
+                data.ReturnValue = metrics;
+                return;
+            }
+            catch (PowerToolsDocumentException e)
+            {
+                var errorXml = new XElement("Document",
+                    new XAttribute("GuidName", data.GuidName),
+                    new XElement("PowerToolsDocumentException",
+                        MakeValidXml(e.ToString())));
+                if (data.CollectProcessTimeMetrics == true)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    var ticks = (currentTime - data.PrevTime).Ticks;
+                    errorXml.Add(new XAttribute("Ticks", ticks));
+                    data.PrevTime = currentTime;
+                }
+                data.ReturnValue = errorXml;
+                return;
+            }
+            catch (FileFormatException e)
+            {
+                var errorXml = new XElement("Document",
+                    new XAttribute("GuidName", data.GuidName),
+                    new XElement("FileFormatException",
+                        MakeValidXml(e.ToString())));
+                if (data.CollectProcessTimeMetrics == true)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    var ticks = (currentTime - data.PrevTime).Ticks;
+                    errorXml.Add(new XAttribute("Ticks", ticks));
+                    data.PrevTime = currentTime;
+                }
+                data.ReturnValue = errorXml;
+                return;
+            }
+            catch (System.Threading.ThreadAbortException)
+            {
+                var errorXml = new XElement("Document",
+                    new XAttribute("GuidName", data.GuidName),
+                    new XElement("TimeoutException",
+                        new XAttribute("Miliseconds", data.TimeoutInMiliseconds)));
+                if (data.CollectProcessTimeMetrics == true)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    var ticks = (currentTime - data.PrevTime).Ticks;
+                    errorXml.Add(new XAttribute("Ticks", ticks));
+                    data.PrevTime = currentTime;
+                }
+                data.ReturnValue = errorXml;
+                return;
+            }
+            catch (Exception e)
+            {
+                var errorXml = new XElement("Document",
+                    new XAttribute("GuidName", data.GuidName),
+                    new XElement("Exception",
+                        MakeValidXml(e.ToString())));
+                if (data.CollectProcessTimeMetrics == true)
+                {
+                    DateTime currentTime = DateTime.Now;
+                    var ticks = (currentTime - data.PrevTime).Ticks;
+                    errorXml.Add(new XAttribute("Ticks", ticks));
+                    data.PrevTime = currentTime;
+                }
+                data.ReturnValue = errorXml;
+                return;
             }
         }
 
@@ -180,7 +253,7 @@ namespace OxRunner
         {
             if (repoLocation.FullName != m_RepoLocation)
             {
-                m_Repo = new Repo(repoLocation);
+                m_Repo = new Repo(repoLocation, RepoAccessLevel.FileAccessOnly);
                 m_RepoLocation = repoLocation.FullName;
             }
         }
