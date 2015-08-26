@@ -48,9 +48,9 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\Runner.64\Runner.64.csproj">
-      <Project>{c0f38978-83b7-433e-a6da-84e190217a48}</Project>
-      <Name>Runner.64</Name>
+    <ProjectReference Include="..\..\Runner\Runner.csproj">
+      <Project>{1d65641d-7001-4a2b-8b67-fc0cf6a7c81f}</Project>
+      <Name>Runner</Name>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
