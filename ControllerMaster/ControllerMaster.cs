@@ -684,7 +684,7 @@ namespace OxRunner
                     }
 
                     bool receivedPong = false;
-                    for (int i = 0; i < 20; i++)
+                    for (int i = 0; i < 40; i++)
                     {
                         // Send Ping and receive Pong to make sure that RunnerMaster is alive.
 

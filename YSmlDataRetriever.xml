@@ -1,0 +1,20 @@
+<Commands>
+
+	<KillProcesses SearchFor="RunnerDaemonSmlDataRetriever*"/>
+		
+    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSmlDataRetriever\RunnerDaemonSmlDataRetriever\" ExeName="RunnerDaemonSmlDataRetriever.exe" />
+  
+    <If MachineName="pc17">
+        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerSmlDataRetriever\RunnerMasterSmlDataRetriever\"
+                      ExeName="RunnerMasterSmlDataRetriever.exe"
+                      Args="\\Bigi5-8\e\TestFileRepo"
+					  Skip="null" 
+					  Take="null" 
+					  />
+        <Run Exe="\\pc17\C\Users\Eric\Documents\OxRunner\RunnerSmlDataRetriever\RunnerDaemonSmlDataRetriever\bin\Debug\RunnerDaemonSmlDataRetriever*.exe" />
+		          
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonSmlDataRetriever*"/>
+    </If>
+  
+</Commands>

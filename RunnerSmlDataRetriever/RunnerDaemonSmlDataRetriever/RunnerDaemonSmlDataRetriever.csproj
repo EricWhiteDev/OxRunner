@@ -4,16 +4,16 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{F50E353C-D1B8-478B-BBB5-8B94F6B6B654}</ProjectGuid>
+    <ProjectGuid>{3485A6C0-6925-4396-BE82-748A7717980D}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>RunnerDaemonCatalog</RootNamespace>
-    <AssemblyName>RunnerDaemonCatalog</AssemblyName>
+    <RootNamespace>RunnerDaemonSmlDataRetriever</RootNamespace>
+    <AssemblyName>RunnerDaemonSmlDataRetriever</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>x64</PlatformTarget>
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -49,7 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="RunnerDaemonCatalog.cs" />
+    <Compile Include="RunnerDaemonSmlDataRetriever.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
