@@ -110,7 +110,7 @@ namespace OxRunner
                                     return errorXml;
                                 }
 
-                                int? timeoutInMiliseconds = 30000;    //   <================================================================================================================================= parameterize this
+                                int? timeoutInMiliseconds = 60000;    //   <================================================================================================================================= parameterize this
 
                                 RunnerDaemonThreadData rdts = new RunnerDaemonThreadData()
                                 {
