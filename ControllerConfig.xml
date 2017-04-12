@@ -4,6 +4,9 @@
   <WriteLog Val="false" />
   <CollectProcessTimeMetrics Val="false" />
   <Computers>
+    <Computer Name="area51"
+              MaxConcurrentJobs="16"
+              WindowStyle="Normal" />
     <Computer Name="xps"
               MaxConcurrentJobs="8"
               WindowStyle="Normal" />

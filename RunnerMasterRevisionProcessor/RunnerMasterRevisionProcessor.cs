@@ -9,7 +9,7 @@ using OxRunner;
 
 namespace OxRunner
 {
-    class RunnerMasterSmlDataRetriever : RunnerMaster
+    class RunnerMasterRevisionProcessor : RunnerMaster
     {
         static DirectoryInfo m_DiRepo;
         static Repo m_Repo;
@@ -17,6 +17,7 @@ namespace OxRunner
         static Dictionary<string, bool> m_RemainingFiles = new Dictionary<string, bool>();
         static List<List<string>> m_Jobs;
         static int m_NumberOfClientComputers;
+        static DirectoryInfo m_TestRunOutputDi = null;
 
         static int? m_Skip = null;
         static int? m_Take = null;
@@ -39,9 +40,12 @@ namespace OxRunner
             // temporarily, going to skip looking for the specific file argument.
             // all this is going to be rewritten soon anyway.
 
+            m_TestRunOutputDi = FileUtils.GetDateTimeStampedDirectoryInfo(@"H:\RevProc");
+            m_TestRunOutputDi.Create();
+
             m_Repo = new Repo(m_DiRepo, RepoAccessLevel.ReadOnly);
-            var runnerMaster = new RunnerMasterSmlDataRetriever();
-            runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterSmlDataRetriever");
+            var runnerMaster = new RunnerMasterRevisionProcessor();
+            runnerMaster.PrintToConsole(ConsoleColor.White, "RunnerMasterRevisionProcessor");
             runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Number of client computers: {0}", m_NumberOfClientComputers));
             runnerMaster.PrintToConsole(ConsoleColor.White, string.Format("Doc repo location: {0}", m_DiRepo.FullName));
             runnerMaster.InitializeWork();
@@ -50,12 +54,12 @@ namespace OxRunner
             runnerMaster.MessageLoop(m => runnerMaster.ProcessMessage(m));
         }
 
-        public RunnerMasterSmlDataRetriever() : base() { }
+        public RunnerMasterRevisionProcessor() : base() { }
 
         private void InitializeWork()
         {
 #if false
-            m_FilesToProcess = m_Repo.GetSpreadsheetMLFiles();
+            m_FilesToProcess = m_Repo.GetWordprocessingMLFiles();
 
             if (m_Skip != null && m_Take == null)
                 m_FilesToProcess = m_FilesToProcess.Skip((int)m_Skip).ToArray();
@@ -66,8 +70,12 @@ namespace OxRunner
 
             foreach (var item in m_FilesToProcess)
                 m_RemainingFiles.Add(item, false);
+
+            m_Jobs = DivvyIntoJobs(m_Repo, m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
 #endif
-            XDocument cat = XDocument.Load(@"F:\TestFileRepo\Catalog-15-08-21-130826013.log");
+
+#if true
+            XDocument cat = XDocument.Load(@"D:\ITU-Mod-Submissions-Repo\Catalog-17-04-11-154621649.log");
 
             var tempList = new List<string>();
             foreach (var doc in cat
@@ -75,24 +83,38 @@ namespace OxRunner
                 .Element("Documents")
                 .Elements("Document")
                 .Where(d =>
-                    {
-                        var fileType = (string)d.Attribute("FileType");
-                        if (fileType != "SpreadsheetML")
-                            return false;
-                        var valErr = (string)d.Elements("SdkValidationError").Attributes("Val").FirstOrDefault();
-                        if (valErr != null)
-                            return false;
-                        return true;
-                    }))
+                {
+                    var fileType = (string)d.Attribute("FileType");
+                    if (fileType != "WordprocessingML")
+                        return false;
+                    var exception = d.Element("Exception");
+                    if (exception != null)
+                        return false;
+                    //var valErr = (string)d.Elements("SdkValidationError").Attributes("Val").FirstOrDefault();
+                    //if (valErr != null)
+                    //    return false;
+                    return true;
+                })
+                )
             {
                 var guidName = (string)doc.Attribute("GuidName");
-                m_RemainingFiles.Add(guidName, false);
                 tempList.Add(guidName);
             }
 
             m_FilesToProcess = tempList;
 
+            if (m_Skip != null && m_Take == null)
+                m_FilesToProcess = m_FilesToProcess.Skip((int)m_Skip).ToArray();
+            else if (m_Skip == null && m_Take != null)
+                m_FilesToProcess = m_FilesToProcess.Take((int)m_Take).ToArray();
+            else if (m_Skip != null && m_Take != null)
+                m_FilesToProcess = m_FilesToProcess.Skip((int)m_Skip).Take((int)m_Take).ToArray();
+
+            foreach (var item in m_FilesToProcess)
+                m_RemainingFiles.Add(item, false);
+
             m_Jobs = DivvyIntoJobs(m_Repo, m_FilesToProcess, m_NumberOfClientComputers * OxRunConstants.RunnerDaemonProcessesPerClient);
+#endif
         }
 
         private void ProcessMessage(DaemonMessage message)
@@ -155,7 +177,7 @@ namespace OxRunner
                 PrintToConsole(string.Format("Sending Report Start"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SmlDataRetriever")),
+                    new XAttribute("Val", "RevisionProcessor")),
                 new XElement("TotalItemsToProcess",
                     new XAttribute("Val", totalItemsToProcess)));
 
@@ -169,7 +191,7 @@ namespace OxRunner
                 PrintToConsole(string.Format("Sending Report"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SmlDataRetriever")),
+                    new XAttribute("Val", "RevisionProcessor")),
                 new XElement("RunnerDaemonMachineName",
                     new XAttribute("Val", runnerDaemonMachineName)),
                 new XElement("ItemsProcessed",
@@ -186,7 +208,7 @@ namespace OxRunner
                 PrintToConsole(string.Format("Sending Report Complete"));
             var cmsg = new XElement("Message",
                 new XElement("ReportName",
-                    new XAttribute("Val", "SmlDataRetriever")));
+                    new XAttribute("Val", "RevisionProcessor")));
 
             Runner.SendMessage("ReportComplete", cmsg, m_MasterMachineName, OxRunConstants.ControllerMasterStatusQueueName);
         }
@@ -208,6 +230,8 @@ namespace OxRunner
                 m_CollectProcessTimeMetrics == true ?
                     new XElement("CollectProcessTimeMetrics",
                         new XAttribute("Val", true)) : null,
+                new XElement("TestRunOutputDi",
+                    new XAttribute("Val", m_TestRunOutputDi.FullName)),
                 new XElement("Documents",
                     thisJob.Select(item => new XElement("Document",
                         new XAttribute("GuidName", item)))));

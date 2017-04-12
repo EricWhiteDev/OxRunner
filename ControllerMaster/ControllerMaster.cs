@@ -37,7 +37,7 @@ namespace OxRunner
         static FileInfo m_FiConfig;
         static XDocument m_XdConfig;
         static string m_Editor = null;
-        static bool? m_WriteLog = null;
+        static bool? m_WriteLog = true;
         static bool? m_CollectProcessTimeMetrics = null;
 
         static XElement m_CurrentReport = null;
@@ -801,7 +801,25 @@ namespace OxRunner
 
                 UpdateAssemblyInfoVersion(projectPath, count + 1);
 
-                var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
+                var results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName + " /t:clean");
+                if (results.ExitCode == 0)
+                {
+                    PrintToConsole(ConsoleColor.Gray, string.Format("Clean successful for {0}", newExecutableName.Name));
+                    UpdateConsole();
+                }
+                else
+                {
+                    PrintToConsole(ConsoleColor.Red, string.Format("Clean for {0} failed", newExecutableName.Name));
+                    var sa = results.Output.ToString().Split(new[] { "\r\n" }, StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var item in sa)
+                    {
+                        PrintToConsole(ConsoleColor.Red, item);
+                    }
+                    UpdateConsole();
+                    return false;
+                }
+
+                results = ExecutableRunner.RunExecutable(msBuildPath, "", projectPath.FullName);
                 if (results.ExitCode == 0)
                 {
                     PrintToConsole(ConsoleColor.Gray, string.Format("Build successful for {0}", newExecutableName.Name));

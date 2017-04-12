@@ -31,7 +31,7 @@ namespace CopyFilesIntoRepo
 
     public class Program
     {
-        public static DirectoryInfo TheRepoToOperateOn = new DirectoryInfo(@"E:\TestFileRepo");
+        public static DirectoryInfo TheRepoToOperateOn = new DirectoryInfo(@"D:\ITU-Mod-Submissions-Repo");
         public static List<DirectoryInfo> s_DirectoriesToSearch = new List<DirectoryInfo>()
         {
             //new DirectoryInfo(@"E:\Sync\TestFiles"),
@@ -40,7 +40,7 @@ namespace CopyFilesIntoRepo
             //new DirectoryInfo(@"E:\OXml-Test-Files"),
             //new DirectoryInfo(@"E:\DownloadedDocuments"),
 
-            new DirectoryInfo(@"C:\Users\Eric\Bts"),
+            new DirectoryInfo(@"D:\ITU-Mod-Submissions\ITU_MOD_Submissions"),
             //new DirectoryInfo(@),
             //new DirectoryInfo(@),
             //new DirectoryInfo(@),
@@ -81,11 +81,13 @@ namespace CopyFilesIntoRepo
 
         public static List<PatternMonikersItem> s_PatternMonikers = new List<PatternMonikersItem>
         {
+#if false
             new PatternMonikersItem() { Pattern = "100-RevisionAccepterTestDocuments",                                  Monikers = new [] { "RevisionAccepter" },},
             new PatternMonikersItem() { Pattern = "200-FormattingAssemblerTestDocuments",                               Monikers = new [] { "FormattingAssembler" },},
             new PatternMonikersItem() { Pattern = "QualityBar",                                                         Monikers = new [] { "HtmlConverter", "QualityBar" },},
             new PatternMonikersItem() { Pattern = "ListItemRetriever",                                                  Monikers = new [] { "ListItemRetriever" },},
             new PatternMonikersItem() { Pattern = "Restart",                                                            Monikers = new [] { "HtmlConverter", "ListItemRetriever", "Restart" },},
+#endif
         };
 
         public static int s_RepoLength;
@@ -117,11 +119,11 @@ namespace CopyFilesIntoRepo
                 foreach (var file in dirToCopy.GetFiles(pattern))
                 {
                     Console.SetCursorPosition(0, 2);
-                    Console.WriteLine(string.Format("Adding {0}", file.FullName).PadRight(80));
+                    Console.WriteLine(string.Format("Adding {0}", file.FullName).PadRight(100));
                     PatternMonikersItem pmi = s_PatternMonikers.FirstOrDefault(pm => file.FullName.Contains(pm.Pattern));
                     Repo.StoreStatus rss;
                     if (pmi == null)
-                        rss = r.Store(file, new string[] { });
+                        rss = r.Store(file, new string[] { file.Name });
                     else
                         rss = r.Store(file, pmi.Monikers);
                     AddToMetrics(file, rss);

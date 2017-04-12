@@ -2,7 +2,7 @@
 
 	<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
 		
-    <BuildMultipleExes ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\" ExeName="RunnerDaemonCatalog.exe" />
+    <BuildMultipleExes ProjectPath="C:\Users\e\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\" ExeName="RunnerDaemonCatalog.exe" />
   
     <!--If MachineName="bigi5-8">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
@@ -25,18 +25,19 @@
     </If>
     -->
   
-    <If MachineName="win8-1">
-        <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
+    <If MachineName="area51">
+        <RunnerMaster ProjectPath="C:\Users\e\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
-                      Args="\\Bigi5-8\e\TestFileRepo"
+                      Args="\\area51\d\ITU-Mod-Submissions-Repo"
 					  Skip="null" 
 					  Take="null" 
 					  />
-        <Run Exe="\\win8-1\win8-1-c\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
+        <Run Exe="\\area51\Users\e\Documents\OxRunner\RunnerCatalog\RunnerDaemonCatalog\bin\Debug\RunnerDaemonCatalog*.exe" />
 		<WaitForRunnerMaster />
 		<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
     </If>
   
+    <!--
     <If MachineName="xps">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"
                       ExeName="RunnerMasterCatalog.exe"
@@ -48,6 +49,7 @@
 		<WaitForRunnerMaster />
 		<KillProcesses SearchFor="RunnerDaemonCatalog*"/>
     </If>
+	-->
   
     <!--If MachineName="pc17">
         <RunnerMaster ProjectPath="C:\Users\Eric\Documents\OxRunner\RunnerCatalog\RunnerMasterCatalog\"

@@ -17,7 +17,7 @@ namespace OxRunner
         public const string ControllerMasterIsAliveQueueName = "controllermasteralive";
         public const string ControllerDaemonQueueName = "controllerdaemon";
         public const string RunnerDaemonQueueName = "runnerdaemon"; // minor version of the assembly gets appended to this
-        public const int RunnerDaemonProcessesPerClient = 5;
+        public const int RunnerDaemonProcessesPerClient = 16;
 
         public const string RunnerMasterQueueName = "runnermaster";
         public const string RunnerMasterIsAliveQueueName = "runnermasteralive";
