@@ -1,0 +1,28 @@
+<Commands>
+
+	<KillProcesses SearchFor="RunnerDaemonWmlComparer*"/>
+		
+    <BuildMultipleExes ProjectPath="C:\Users\e\Documents\OxRunner\RunnerDaemonWmlComparer\" ExeName="RunnerDaemonWmlComparer.exe" />
+  
+    <If MachineName="area51">
+        <!--RunnerMaster ProjectPath="C:\Users\e\Documents\OxRunner\RunnerMasterRevisionProcessor\"
+                      ExeName="RunnerMasterRevisionProcessor.exe"
+                      Args="\\area51\d\ITU-TestFileRepo"
+					  Skip="null" 
+					  Take="null" 
+					  /-->
+
+        <RunnerMaster ProjectPath="C:\Users\e\Documents\OxRunner\RunnerMasterWmlComparer\"
+                      ExeName="RunnerMasterWmlComparer.exe"
+                      Args="\\area51\d\ITU-Mod-Submissions-Repo"
+					  Skip="null" 
+					  Take="null" 
+					  />
+
+		<Run Exe="\\area51\Users\e\Documents\OxRunner\RunnerDaemonWmlComparer\bin\Debug\RunnerDaemonWmlComparer*.exe" />
+		          
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonWmlComparer*"/>
+    </If>
+  
+</Commands>
