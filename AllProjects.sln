@@ -38,6 +38,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerMasterWmlComparer", "
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerDaemonWmlComparer", "RunnerDaemonWmlComparer\RunnerDaemonWmlComparer.csproj", "{EC6D4139-E2BB-4591-BC40-D63726CFE394}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerMasterDocumentBuilder", "RunnerMasterDocumentBuilder\RunnerMasterDocumentBuilder.csproj", "{9B3396BF-B0F8-46F8-9F9A-0FAAA862C89D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunnerDaemonDocumentBuilder", "RunnerDaemonDocumentBuilder\RunnerDaemonDocumentBuilder.csproj", "{0373B272-29E1-4D42-A3B4-3A1487263B22}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +108,14 @@ Global
 		{EC6D4139-E2BB-4591-BC40-D63726CFE394}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EC6D4139-E2BB-4591-BC40-D63726CFE394}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EC6D4139-E2BB-4591-BC40-D63726CFE394}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9B3396BF-B0F8-46F8-9F9A-0FAAA862C89D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9B3396BF-B0F8-46F8-9F9A-0FAAA862C89D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9B3396BF-B0F8-46F8-9F9A-0FAAA862C89D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9B3396BF-B0F8-46F8-9F9A-0FAAA862C89D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0373B272-29E1-4D42-A3B4-3A1487263B22}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0373B272-29E1-4D42-A3B4-3A1487263B22}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0373B272-29E1-4D42-A3B4-3A1487263B22}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0373B272-29E1-4D42-A3B4-3A1487263B22}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

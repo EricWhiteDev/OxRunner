@@ -1,0 +1,21 @@
+<Commands>
+
+	<KillProcesses SearchFor="RunnerDaemonDocumentBuilder*"/>
+		
+    <BuildMultipleExes ProjectPath="C:\Users\e\Documents\OxRunner\RunnerDaemonDocumentBuilder\" ExeName="RunnerDaemonDocumentBuilder.exe" />
+  
+    <If MachineName="area51">
+        <RunnerMaster ProjectPath="C:\Users\e\Documents\OxRunner\RunnerMasterDocumentBuilder\"
+                      ExeName="RunnerMasterDocumentBuilder.exe"
+                      Args="\\area51\d\TestFileRepo"
+					  Skip="null" 
+					  Take="null" 
+					  />
+
+		<Run Exe="\\area51\Users\e\Documents\OxRunner\RunnerDaemonDocumentBuilder\bin\Debug\RunnerDaemonDocumentBuilder*.exe" />
+		          
+		<WaitForRunnerMaster />
+		<KillProcesses SearchFor="RunnerDaemonDocumentBuilder*"/>
+    </If>
+  
+</Commands>

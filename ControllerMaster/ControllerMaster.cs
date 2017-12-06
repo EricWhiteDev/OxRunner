@@ -311,12 +311,25 @@ namespace OxRunner
                         var reportFile = FileUtils.GetDateTimeStampedFileInfo("../../../" + m_CurrentReportName, ".log");
                         var elapsedTime = DateTime.Now - runnerMetrics.StartTime;
                         int itemsPerMinute = (int)(runnerMetrics.TotalItems / elapsedTime.TotalMinutes);
+
+                        var anomalies = m_CurrentReport.Elements("Documents").Elements().Where(e =>
+                        {
+                            if (e.Attributes().Any(at => at.Name != "GuidName" && at.Name != "WorkingSetBefore" && at.Name != "WorkingSetAfter"))
+                                return true;
+                            if (e.HasElements)
+                                return true;
+                            return false;
+                        });
+                        var anomalyCount = anomalies.Count();
                         var sortedReport = new XElement("Report",
                             m_CurrentReport.Attributes(),
                             new XElement("Metrics",
                                 new XElement("StartTime", new XAttribute("Val", runnerMetrics.StartTime.ToString("T"))),
                                 new XElement("ElapsedTime", new XAttribute("Val", elapsedTime.ToString("c").Split('.')[0])),
-                                new XElement("ItemsPerMinute", itemsPerMinute)),
+                                new XElement("ItemsPerMinute", itemsPerMinute),
+                                new XElement("AnomalyCount", anomalyCount),
+                                new XElement("ErrorDocuments",
+                                    anomalies)),
                             new XElement("Documents",
                                 m_CurrentReport.Elements("Documents").Elements().OrderBy(d => (string)d.Attribute("GuidName"))));
                         sortedReport.Save(reportFile.FullName);
